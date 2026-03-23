@@ -1,4 +1,4 @@
-// Simple localStorage-based funnel tracking
+import { supabase } from "@/integrations/supabase/client";
 
 export type LeadStatus = "aguardando" | "comprou" | "nao_comprou";
 
@@ -7,70 +7,55 @@ export interface Lead {
   name: string;
   email: string;
   phone: string;
-  createdAt: string;
   status: LeadStatus;
-}
-
-const LEAD_STATUS_KEY = "funnel_lead_status";
-
-export function getLeadStatuses(): Record<string, LeadStatus> {
-  try {
-    return JSON.parse(localStorage.getItem(LEAD_STATUS_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-export function setLeadStatus(leadId: string, status: LeadStatus) {
-  const statuses = getLeadStatuses();
-  statuses[leadId] = status;
-  localStorage.setItem(LEAD_STATUS_KEY, JSON.stringify(statuses));
+  created_at: string;
 }
 
 export interface FunnelEvent {
   type: "page_view" | "quiz_start" | "quiz_complete" | "sales_view" | "pre_checkout";
-  timestamp: string;
 }
 
-const LEADS_KEY = "funnel_leads";
-const EVENTS_KEY = "funnel_events";
-
-export function saveLead(lead: Omit<Lead, "id" | "createdAt">): Lead {
-  const leads = getLeads();
-  const newLead: Lead = {
-    ...lead,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
-  leads.push(newLead);
-  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
-  return newLead;
+export async function saveLead(lead: { name: string; email: string; phone: string; status: LeadStatus }): Promise<Lead | null> {
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({ name: lead.name, email: lead.email, phone: lead.phone, status: lead.status })
+    .select()
+    .single();
+  if (error) { console.error("saveLead error:", error); return null; }
+  return data as Lead;
 }
 
-export function getLeads(): Lead[] {
-  try {
-    return JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
-  } catch {
-    return [];
-  }
+export async function getLeads(): Promise<Lead[]> {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) { console.error("getLeads error:", error); return []; }
+  return (data || []) as Lead[];
 }
 
-export function trackEvent(type: FunnelEvent["type"]) {
-  const events = getEvents();
-  events.push({ type, timestamp: new Date().toISOString() });
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+export async function updateLeadStatus(leadId: string, status: LeadStatus) {
+  const { error } = await supabase
+    .from("leads")
+    .update({ status })
+    .eq("id", leadId);
+  if (error) console.error("updateLeadStatus error:", error);
 }
 
-export function getEvents(): FunnelEvent[] {
-  try {
-    return JSON.parse(localStorage.getItem(EVENTS_KEY) || "[]");
-  } catch {
-    return [];
-  }
+export async function trackEvent(type: FunnelEvent["type"]) {
+  const { error } = await supabase
+    .from("funnel_events")
+    .insert({ type });
+  if (error) console.error("trackEvent error:", error);
 }
 
-export function getFunnelStats() {
-  const events = getEvents();
+export async function getFunnelStats() {
+  const { data, error } = await supabase
+    .from("funnel_events")
+    .select("type");
+  if (error) { console.error("getFunnelStats error:", error); }
+
+  const events = data || [];
   const pageViews = events.filter((e) => e.type === "page_view").length;
   const quizStarts = events.filter((e) => e.type === "quiz_start").length;
   const quizCompletes = events.filter((e) => e.type === "quiz_complete").length;

@@ -1,24 +1,22 @@
 import { useState, useEffect } from "react";
-import { getFunnelStats, getLeads, getLeadStatuses, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
+import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle } from "lucide-react";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const Admin = () => {
-  const [stats, setStats] = useState(getFunnelStats());
+  const [stats, setStats] = useState<ReturnType<typeof getFunnelStats> extends Promise<infer T> ? T : never | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
-
-  const loadLeads = () => {
-    const statuses = getLeadStatuses();
-    const allLeads = getLeads()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .map((l) => ({ ...l, status: (statuses[l.id] || l.status || "aguardando") as LeadStatus }));
-    setLeads(allLeads);
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setStats(getFunnelStats());
-    loadLeads();
+    const load = async () => {
+      const [s, l] = await Promise.all([getFunnelStats(), getLeads()]);
+      setStats(s);
+      setLeads(l);
+      setLoading(false);
+    };
+    load();
   }, []);
 
   const handleStatusChange = (leadId: string, status: LeadStatus) => {
@@ -31,6 +29,14 @@ const Admin = () => {
     const message = encodeURIComponent("Gostei do seu curso, quero comprar mas tenho dúvidas");
     window.open(`https://wa.me/${number}?text=${message}`, "_blank");
   };
+
+  if (loading || !stats) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground font-sans">Carregando...</p>
+      </div>
+    );
+  }
 
   const statCards = [
     { label: "Page Views", value: stats.pageViews, pct: "100%", icon: BarChart3, color: "bg-primary text-primary-foreground" },
@@ -53,7 +59,6 @@ const Admin = () => {
         </h1>
         <p className="text-muted-foreground font-sans mb-8">Analytics do funil e leads capturados</p>
 
-        {/* Funnel Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {statCards.map((card) => (
             <div key={card.label} className={`rounded-xl p-4 ${card.color} border border-border`}>
@@ -65,7 +70,6 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Dropoff */}
         <div className="grid grid-cols-2 gap-4 mb-10">
           {dropoffCards.map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
@@ -76,7 +80,6 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Kanban Board */}
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
           Kanban de Leads ({leads.length})
         </h2>
@@ -84,10 +87,7 @@ const Admin = () => {
           <KanbanBoard leads={leads} onStatusChange={handleStatusChange} />
         </div>
 
-        {/* Leads Table */}
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
-          Tabela de Leads
-        </h2>
+        <h2 className="text-2xl font-display font-bold text-foreground mb-4">Tabela de Leads</h2>
 
         {leads.length === 0 ? (
           <div className="text-center py-16 bg-card border border-border rounded-xl">
@@ -123,7 +123,7 @@ const Admin = () => {
                       </span>
                     </TableCell>
                     <TableCell className="font-sans text-muted-foreground text-sm">
-                      {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
+                      {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-right">
                       <button

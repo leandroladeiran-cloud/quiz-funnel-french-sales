@@ -16,12 +16,12 @@ const PreCheckoutDialog = ({ open, onOpenChange }: PreCheckoutDialogProps) => {
   const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !phone.trim()) return;
 
-    saveLead({ name: name.trim(), email: email.trim(), phone: phone.trim(), status: "aguardando" });
-    trackEvent("pre_checkout");
+    await saveLead({ name: name.trim(), email: email.trim(), phone: phone.trim(), status: "aguardando" });
+    await trackEvent("pre_checkout");
     setSubmitted(true);
   };
 
@@ -63,43 +63,17 @@ const PreCheckoutDialog = ({ open, onOpenChange }: PreCheckoutDialogProps) => {
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-sans">Nome completo</Label>
-                <Input
-                  id="name"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  maxLength={100}
-                />
+                <Input id="name" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-sans">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  maxLength={255}
-                />
+                <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone" className="font-sans">WhatsApp / Telefone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  maxLength={20}
-                />
+                <Input id="phone" type="tel" placeholder="(11) 99999-9999" value={phone} onChange={(e) => setPhone(e.target.value)} required maxLength={20} />
               </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-accent text-accent-foreground font-sans font-bold text-lg rounded-lg hover:brightness-110 transition-all"
-              >
+              <button type="submit" className="w-full py-3 bg-accent text-accent-foreground font-sans font-bold text-lg rounded-lg hover:brightness-110 transition-all">
                 Garantir Minha Vaga →
               </button>
               <p className="text-xs text-muted-foreground text-center font-sans">
