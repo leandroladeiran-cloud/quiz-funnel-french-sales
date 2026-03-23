@@ -31,6 +31,7 @@ const Index = () => {
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
     } else {
+      trackEvent("quiz_complete");
       setScreen("result");
     }
   }, [answers, currentQuestion]);

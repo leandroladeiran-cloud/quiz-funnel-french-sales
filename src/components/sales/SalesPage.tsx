@@ -224,6 +224,8 @@ const SalesPage = () => {
       <footer className="py-8 px-6 bg-primary text-primary-foreground/60 text-center font-sans text-sm">
         <p>© 2026 Francês Descomplicado. Todos os direitos reservados.</p>
       </footer>
+
+      <PreCheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
     </div>
   );
 };
