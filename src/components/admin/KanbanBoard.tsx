@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from "react";
-import { type Lead, type LeadStatus, setLeadStatus } from "@/lib/funnel-tracking";
+import { type Lead, type LeadStatus, updateLeadStatus } from "@/lib/funnel-tracking";
 import { MessageCircle, GripVertical } from "lucide-react";
 
 interface KanbanBoardProps {
@@ -34,10 +34,10 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
     setDragOverCol(colId);
   };
 
-  const handleDrop = (e: DragEvent, colId: LeadStatus) => {
+  const handleDrop = async (e: DragEvent, colId: LeadStatus) => {
     e.preventDefault();
     if (draggedId) {
-      setLeadStatus(draggedId, colId);
+      await updateLeadStatus(draggedId, colId);
       onStatusChange(draggedId, colId);
     }
     setDraggedId(null);
