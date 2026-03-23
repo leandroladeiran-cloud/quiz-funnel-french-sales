@@ -20,7 +20,7 @@ const PreCheckoutDialog = ({ open, onOpenChange }: PreCheckoutDialogProps) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !phone.trim()) return;
 
-    saveLead({ name: name.trim(), email: email.trim(), phone: phone.trim() });
+    saveLead({ name: name.trim(), email: email.trim(), phone: phone.trim(), status: "aguardando" });
     trackEvent("pre_checkout");
     setSubmitted(true);
   };

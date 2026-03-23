@@ -1,16 +1,29 @@
 import { useState, useEffect } from "react";
-import { getFunnelStats, getLeads, type Lead } from "@/lib/funnel-tracking";
+import { getFunnelStats, getLeads, getLeadStatuses, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle } from "lucide-react";
+import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const Admin = () => {
   const [stats, setStats] = useState(getFunnelStats());
   const [leads, setLeads] = useState<Lead[]>([]);
 
+  const loadLeads = () => {
+    const statuses = getLeadStatuses();
+    const allLeads = getLeads()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((l) => ({ ...l, status: (statuses[l.id] || l.status || "aguardando") as LeadStatus }));
+    setLeads(allLeads);
+  };
+
   useEffect(() => {
     setStats(getFunnelStats());
-    setLeads(getLeads().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    loadLeads();
   }, []);
+
+  const handleStatusChange = (leadId: string, status: LeadStatus) => {
+    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status } : l)));
+  };
 
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -63,9 +76,17 @@ const Admin = () => {
           ))}
         </div>
 
+        {/* Kanban Board */}
+        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+          Kanban de Leads ({leads.length})
+        </h2>
+        <div className="mb-10">
+          <KanbanBoard leads={leads} onStatusChange={handleStatusChange} />
+        </div>
+
         {/* Leads Table */}
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
-          Leads Capturados ({leads.length})
+          Tabela de Leads
         </h2>
 
         {leads.length === 0 ? (
@@ -81,6 +102,7 @@ const Admin = () => {
                   <TableHead className="font-sans">Nome</TableHead>
                   <TableHead className="font-sans">E-mail</TableHead>
                   <TableHead className="font-sans">Telefone</TableHead>
+                  <TableHead className="font-sans">Status</TableHead>
                   <TableHead className="font-sans">Data</TableHead>
                   <TableHead className="font-sans text-right">Ação</TableHead>
                 </TableRow>
@@ -91,6 +113,15 @@ const Admin = () => {
                     <TableCell className="font-sans font-semibold text-foreground">{lead.name}</TableCell>
                     <TableCell className="font-sans text-muted-foreground">{lead.email}</TableCell>
                     <TableCell className="font-sans text-muted-foreground">{lead.phone}</TableCell>
+                    <TableCell className="font-sans text-sm">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        lead.status === "comprou" ? "bg-emerald-500/20 text-emerald-700" :
+                        lead.status === "nao_comprou" ? "bg-destructive/20 text-destructive" :
+                        "bg-amber-500/20 text-amber-700"
+                      }`}>
+                        {lead.status === "comprou" ? "Comprou" : lead.status === "nao_comprou" ? "Não Comprou" : "Aguardando"}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-sans text-muted-foreground text-sm">
                       {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
                     </TableCell>
