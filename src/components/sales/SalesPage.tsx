@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Star, Shield, Clock, Users, BookOpen, ArrowRight, Play } from "lucide-react";
 import parisHero from "@/assets/paris-hero.jpg";
+import PreCheckoutDialog from "./PreCheckoutDialog";
+import { trackEvent } from "@/lib/funnel-tracking";
 
 const testimonials = [
   {
