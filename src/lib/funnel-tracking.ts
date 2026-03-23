@@ -1,11 +1,30 @@
 // Simple localStorage-based funnel tracking
 
+export type LeadStatus = "aguardando" | "comprou" | "nao_comprou";
+
 export interface Lead {
   id: string;
   name: string;
   email: string;
   phone: string;
   createdAt: string;
+  status: LeadStatus;
+}
+
+const LEAD_STATUS_KEY = "funnel_lead_status";
+
+export function getLeadStatuses(): Record<string, LeadStatus> {
+  try {
+    return JSON.parse(localStorage.getItem(LEAD_STATUS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function setLeadStatus(leadId: string, status: LeadStatus) {
+  const statuses = getLeadStatuses();
+  statuses[leadId] = status;
+  localStorage.setItem(LEAD_STATUS_KEY, JSON.stringify(statuses));
 }
 
 export interface FunnelEvent {
