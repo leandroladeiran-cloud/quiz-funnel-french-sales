@@ -15,7 +15,14 @@ const Index = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  const handleStartQuiz = useCallback(() => setScreen("quiz"), []);
+  useEffect(() => {
+    trackEvent("page_view");
+  }, []);
+
+  const handleStartQuiz = useCallback(() => {
+    trackEvent("quiz_start");
+    setScreen("quiz");
+  }, []);
 
   const handleAnswer = useCallback((value: string) => {
     const newAnswers = { ...answers, [quizQuestions[currentQuestion].id]: value };
