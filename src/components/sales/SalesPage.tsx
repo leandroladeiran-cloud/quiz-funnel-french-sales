@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Star, Shield, Clock, Users, BookOpen, ArrowRight, Play } from "lucide-react";
 import parisHero from "@/assets/paris-hero.jpg";
+import PreCheckoutDialog from "./PreCheckoutDialog";
+import { trackEvent } from "@/lib/funnel-tracking";
 
 const testimonials = [
   {
@@ -32,6 +35,12 @@ const benefits = [
 ];
 
 const SalesPage = () => {
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  useEffect(() => {
+    trackEvent("sales_view");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -190,6 +199,7 @@ const SalesPage = () => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => setCheckoutOpen(true)}
                 className="w-full py-4 px-8 bg-accent text-accent-foreground font-sans font-bold text-lg rounded-lg animate-pulse-gold flex items-center justify-center gap-2 hover:brightness-110 transition-all"
               >
                 Garantir Minha Vaga
@@ -214,6 +224,8 @@ const SalesPage = () => {
       <footer className="py-8 px-6 bg-primary text-primary-foreground/60 text-center font-sans text-sm">
         <p>© 2026 Francês Descomplicado. Todos os direitos reservados.</p>
       </footer>
+
+      <PreCheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
     </div>
   );
 };

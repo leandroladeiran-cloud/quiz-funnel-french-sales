@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { trackEvent } from "@/lib/funnel-tracking";
 import { motion } from "framer-motion";
 import { quizQuestions, getQuizResult } from "@/components/quiz/QuizData";
 import QuizProgress from "@/components/quiz/QuizProgress";
@@ -14,7 +15,14 @@ const Index = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  const handleStartQuiz = useCallback(() => setScreen("quiz"), []);
+  useEffect(() => {
+    trackEvent("page_view");
+  }, []);
+
+  const handleStartQuiz = useCallback(() => {
+    trackEvent("quiz_start");
+    setScreen("quiz");
+  }, []);
 
   const handleAnswer = useCallback((value: string) => {
     const newAnswers = { ...answers, [quizQuestions[currentQuestion].id]: value };
@@ -23,6 +31,7 @@ const Index = () => {
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
     } else {
+      trackEvent("quiz_complete");
       setScreen("result");
     }
   }, [answers, currentQuestion]);
