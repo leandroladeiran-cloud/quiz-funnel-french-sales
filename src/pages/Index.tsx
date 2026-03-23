@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { trackEvent } from "@/lib/funnel-tracking";
 import { motion } from "framer-motion";
 import { quizQuestions, getQuizResult } from "@/components/quiz/QuizData";
 import QuizProgress from "@/components/quiz/QuizProgress";
