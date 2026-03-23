@@ -35,6 +35,12 @@ const benefits = [
 ];
 
 const SalesPage = () => {
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  useEffect(() => {
+    trackEvent("sales_view");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
