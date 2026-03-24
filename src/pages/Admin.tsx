@@ -465,6 +465,14 @@ const Admin = () => {
                 })}
               </div>
             </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] mt-6">
+              <p className="text-[13px] font-sans font-semibold text-gray-900 mb-3">Como calculamos</p>
+              <div className="space-y-2 text-[12px] font-sans text-gray-500 leading-relaxed">
+                <p><span className="font-medium text-gray-700">Abandono no Quiz:</span> pessoas que iniciaram o quiz (quiz_start) mas não completaram (quiz_complete). Fórmula: (quizStarts − quizCompletes) / quizStarts × 100</p>
+                <p><span className="font-medium text-gray-700">Abandono nas Vendas:</span> pessoas que viram a página de vendas (sales_view) mas não chegaram ao pré-checkout (pre_checkout). Fórmula: (salesViews − preCheckouts) / salesViews × 100</p>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
