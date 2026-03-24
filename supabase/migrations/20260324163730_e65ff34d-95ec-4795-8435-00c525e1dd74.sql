@@ -1,0 +1,6 @@
+
+ALTER TABLE public.leads 
+  ALTER COLUMN name DROP NOT NULL,
+  ALTER COLUMN email DROP NOT NULL,
+  ALTER COLUMN phone DROP NOT NULL,
+  ADD COLUMN last_step text NOT NULL DEFAULT 'landing';

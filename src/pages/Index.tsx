@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { trackEvent } from "@/lib/funnel-tracking";
+import { trackEvent, ensureVisitorLead, updateVisitorStep } from "@/lib/funnel-tracking";
 import { motion } from "framer-motion";
 import { quizQuestions, getQuizResult } from "@/components/quiz/QuizData";
 import QuizProgress from "@/components/quiz/QuizProgress";
@@ -17,10 +17,12 @@ const Index = () => {
 
   useEffect(() => {
     trackEvent("page_view");
+    ensureVisitorLead();
   }, []);
 
   const handleStartQuiz = useCallback(() => {
     trackEvent("quiz_start");
+    updateVisitorStep("quiz_pergunta_1");
     setScreen("quiz");
   }, []);
 
@@ -29,14 +31,20 @@ const Index = () => {
     setAnswers(newAnswers);
 
     if (currentQuestion < quizQuestions.length - 1) {
+      const nextQ = currentQuestion + 2; // 1-indexed
+      updateVisitorStep(`quiz_pergunta_${nextQ}`);
       setCurrentQuestion((prev) => prev + 1);
     } else {
       trackEvent("quiz_complete");
+      updateVisitorStep("resultado");
       setScreen("result");
     }
   }, [answers, currentQuestion]);
 
-  const handleGoToSales = useCallback(() => setScreen("sales"), []);
+  const handleGoToSales = useCallback(() => {
+    updateVisitorStep("pagina_vendas");
+    setScreen("sales");
+  }, []);
 
   if (screen === "sales") return <SalesPage />;
 

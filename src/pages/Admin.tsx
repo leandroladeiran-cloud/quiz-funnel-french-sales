@@ -1,8 +1,32 @@
 import { useState, useEffect } from "react";
 import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle } from "lucide-react";
+import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle, MapPin } from "lucide-react";
 import KanbanBoard from "@/components/admin/KanbanBoard";
+
+const STEP_LABELS: Record<string, string> = {
+  landing: "Landing Page",
+  quiz_pergunta_1: "Quiz — Pergunta 1",
+  quiz_pergunta_2: "Quiz — Pergunta 2",
+  quiz_pergunta_3: "Quiz — Pergunta 3",
+  quiz_pergunta_4: "Quiz — Pergunta 4",
+  quiz_pergunta_5: "Quiz — Pergunta 5",
+  resultado: "Resultado do Quiz",
+  pagina_vendas: "Página de Vendas",
+  pre_checkout: "Pré-Checkout (dados preenchidos)",
+};
+
+function getStepLabel(step: string) {
+  return STEP_LABELS[step] || step;
+}
+
+function getStepColor(step: string) {
+  if (step === "pre_checkout") return "bg-emerald-500/20 text-emerald-700";
+  if (step === "pagina_vendas") return "bg-accent/20 text-accent-foreground";
+  if (step === "resultado") return "bg-blue-500/20 text-blue-700";
+  if (step.startsWith("quiz_")) return "bg-amber-500/20 text-amber-700";
+  return "bg-muted text-muted-foreground";
+}
 
 const Admin = () => {
   const [stats, setStats] = useState<ReturnType<typeof getFunnelStats> extends Promise<infer T> ? T : never | null>(null);
@@ -37,6 +61,10 @@ const Admin = () => {
       </div>
     );
   }
+
+  // Separate leads with contact info vs anonymous visitors
+  const contactLeads = leads.filter((l) => l.name && l.email && l.phone);
+  const anonymousLeads = leads.filter((l) => !l.name || !l.email || !l.phone);
 
   const statCards = [
     { label: "Page Views", value: stats.pageViews, pct: "100%", icon: BarChart3, color: "bg-primary text-primary-foreground" },
@@ -81,21 +109,23 @@ const Admin = () => {
         </div>
 
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
-          Kanban de Leads ({leads.length})
+          Kanban de Leads ({contactLeads.length})
         </h2>
         <div className="mb-10">
-          <KanbanBoard leads={leads} onStatusChange={handleStatusChange} />
+          <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
         </div>
 
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">Tabela de Leads</h2>
+        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+          Leads com Contato ({contactLeads.length})
+        </h2>
 
-        {leads.length === 0 ? (
-          <div className="text-center py-16 bg-card border border-border rounded-xl">
+        {contactLeads.length === 0 ? (
+          <div className="text-center py-16 bg-card border border-border rounded-xl mb-10">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-sans">Nenhum lead capturado ainda.</p>
+            <p className="text-muted-foreground font-sans">Nenhum lead com dados de contato ainda.</p>
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden mb-10">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -103,13 +133,14 @@ const Admin = () => {
                   <TableHead className="font-sans">E-mail</TableHead>
                   <TableHead className="font-sans">Telefone</TableHead>
                   <TableHead className="font-sans">Status</TableHead>
+                  <TableHead className="font-sans">Última Etapa</TableHead>
                   <TableHead className="font-sans">Data</TableHead>
                   <TableHead className="font-sans text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leads.map((lead) => (
-                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openWhatsApp(lead.phone)}>
+                {contactLeads.map((lead) => (
+                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openWhatsApp(lead.phone!)}>
                     <TableCell className="font-sans font-semibold text-foreground">{lead.name}</TableCell>
                     <TableCell className="font-sans text-muted-foreground">{lead.email}</TableCell>
                     <TableCell className="font-sans text-muted-foreground">{lead.phone}</TableCell>
@@ -122,17 +153,66 @@ const Admin = () => {
                         {lead.status === "comprou" ? "Comprou" : lead.status === "nao_comprou" ? "Não Comprou" : "Aguardando"}
                       </span>
                     </TableCell>
+                    <TableCell className="font-sans text-sm">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStepColor(lead.last_step)}`}>
+                        {getStepLabel(lead.last_step)}
+                      </span>
+                    </TableCell>
                     <TableCell className="font-sans text-muted-foreground text-sm">
                       {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-right">
                       <button
-                        onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone); }}
+                        onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
                         className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-accent hover:underline"
                       >
                         <MessageCircle className="w-4 h-4" />
                         WhatsApp
                       </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <h2 className="text-2xl font-display font-bold text-foreground mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-muted-foreground" />
+          Visitantes Anônimos ({anonymousLeads.length})
+        </h2>
+        <p className="text-sm text-muted-foreground font-sans mb-4">
+          Visitantes que não preencheram os dados — veja onde pararam no funil.
+        </p>
+
+        {anonymousLeads.length === 0 ? (
+          <div className="text-center py-16 bg-card border border-border rounded-xl">
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground font-sans">Nenhum visitante anônimo registrado.</p>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-sans">ID (parcial)</TableHead>
+                  <TableHead className="font-sans">Parou em</TableHead>
+                  <TableHead className="font-sans">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {anonymousLeads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell className="font-sans text-muted-foreground font-mono text-xs">
+                      {lead.id.slice(0, 8)}…
+                    </TableCell>
+                    <TableCell className="font-sans text-sm">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStepColor(lead.last_step)}`}>
+                        {getStepLabel(lead.last_step)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-sans text-muted-foreground text-sm">
+                      {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                     </TableCell>
                   </TableRow>
                 ))}
