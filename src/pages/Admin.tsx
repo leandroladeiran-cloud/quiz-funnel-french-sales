@@ -216,7 +216,7 @@ const Admin = () => {
           {statCards.map((card) => (
             <div key={card.label} className={`rounded-xl p-4 ${card.color} border border-border`}>
               <card.icon className="w-5 h-5 mb-2 opacity-70" />
-              <p className="text-2xl font-display font-bold">{card.value}</p>
+              <p className="text-2xl font-sans font-bold">{card.value}</p>
               <p className="text-xs font-sans opacity-70">{card.label}</p>
               <p className="text-sm font-sans font-semibold mt-1">{card.pct}</p>
             </div>
