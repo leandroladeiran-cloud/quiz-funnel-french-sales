@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
+import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, UserPlus, MousePointerClick, UserCheck, MessageSquare, MessageCircle, TrendingDown, CalendarIcon } from "lucide-react";
+import { Eye, UserPlus, MousePointerClick, UserCheck, MessageSquare, MessageCircle, TrendingDown, CalendarIcon, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
