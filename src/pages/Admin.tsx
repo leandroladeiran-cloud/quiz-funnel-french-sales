@@ -404,10 +404,9 @@ const Admin = () => {
                           {lead.phone ? (
                             <button
                               onClick={() => openWhatsApp(lead.phone!)}
-                              className="inline-flex items-center gap-1.5 text-[12px] font-sans font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-emerald-50 transition-colors"
                             >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                              WhatsApp
+                              <img src={whatsappIcon} alt="WhatsApp" className="w-5 h-5" />
                             </button>
                           ) : (
                             <span className="text-gray-300 text-[12px]">—</span>
