@@ -1,7 +1,8 @@
 import { useState, type DragEvent } from "react";
 import { type Lead, type LeadStatus, updateLeadStatus } from "@/lib/funnel-tracking";
-import { GripVertical, X } from "lucide-react";
+import { GripVertical, FileText } from "lucide-react";
 import { quizQuestions } from "@/components/quiz/QuizData";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
 
 interface KanbanBoardProps {
@@ -41,7 +42,7 @@ const ANSWER_LABELS: Record<string, string> = {
 const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<LeadStatus | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -64,39 +65,37 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
     setDragOverCol(null);
   };
 
+  const sheetAnswers = selectedLead ? ((selectedLead.quiz_answers || {}) as Record<string, string>) : {};
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {COLUMNS.map((col) => {
-        const colLeads = leads.filter((l) => l.status === col.id);
-        const isOver = dragOverCol === col.id;
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {COLUMNS.map((col) => {
+          const colLeads = leads.filter((l) => l.status === col.id);
+          const isOver = dragOverCol === col.id;
 
-        return (
-          <div
-            key={col.id}
-            onDragOver={(e) => { e.preventDefault(); setDragOverCol(col.id); }}
-            onDragLeave={() => setDragOverCol(null)}
-            onDrop={(e) => handleDrop(e, col.id)}
-            className={`rounded-2xl border ${col.border} ${col.bg} p-4 min-h-[200px] transition-all ${
-              isOver ? "ring-2 ring-gray-300 scale-[1.005]" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${col.dot}`} />
-                <h3 className="font-sans font-semibold text-gray-700 text-[13px]">{col.label}</h3>
+          return (
+            <div
+              key={col.id}
+              onDragOver={(e) => { e.preventDefault(); setDragOverCol(col.id); }}
+              onDragLeave={() => setDragOverCol(null)}
+              onDrop={(e) => handleDrop(e, col.id)}
+              className={`rounded-2xl border ${col.border} ${col.bg} p-4 min-h-[200px] transition-all ${
+                isOver ? "ring-2 ring-gray-300 scale-[1.005]" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${col.dot}`} />
+                  <h3 className="font-sans font-semibold text-gray-700 text-[13px]">{col.label}</h3>
+                </div>
+                <span className="text-[11px] font-sans bg-white/80 rounded-full px-2 py-0.5 text-gray-400 font-medium">
+                  {colLeads.length}
+                </span>
               </div>
-              <span className="text-[11px] font-sans bg-white/80 rounded-full px-2 py-0.5 text-gray-400 font-medium">
-                {colLeads.length}
-              </span>
-            </div>
 
-            <div className="space-y-2">
-              {colLeads.map((lead) => {
-                const isExpanded = expandedId === lead.id;
-                const quizAnswers = (lead.quiz_answers || {}) as Record<string, string>;
-                const hasAnswers = Object.keys(quizAnswers).length > 0;
-
-                return (
+              <div className="space-y-2">
+                {colLeads.map((lead) => (
                   <div
                     key={lead.id}
                     draggable
@@ -109,68 +108,106 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
                     <div className="flex items-start gap-2">
                       <GripVertical className="w-3.5 h-3.5 text-gray-300 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : lead.id); }}
-                          className="font-sans font-medium text-gray-900 text-[13px] truncate block text-left hover:text-blue-600 transition-colors w-full"
-                        >
-                          {lead.name || "Anônimo"}
-                        </button>
+                        <p className="font-sans font-medium text-gray-900 text-[13px] truncate">{lead.name || "Anônimo"}</p>
                         <p className="font-sans text-gray-400 text-[11px] truncate">{lead.email}</p>
                         <p className="font-sans text-gray-400 text-[11px]">{lead.phone}</p>
                       </div>
-                      {lead.phone && (
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
-                          className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
-                          title="Abrir WhatsApp"
+                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
+                          className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                          title="Ver respostas do quiz"
                         >
-                          <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
+                          <FileText className="w-3.5 h-3.5" />
                         </button>
-                      )}
-                    </div>
-
-                    {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-[11px] font-sans font-semibold text-gray-500 uppercase tracking-wide">Respostas do Quiz</p>
-                          <button onClick={(e) => { e.stopPropagation(); setExpandedId(null); }} className="text-gray-300 hover:text-gray-500">
-                            <X className="w-3.5 h-3.5" />
+                        {lead.phone && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
+                            className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                            title="Abrir WhatsApp"
+                          >
+                            <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
                           </button>
-                        </div>
-                        {hasAnswers ? (
-                          <div className="space-y-1.5">
-                            {quizQuestions.map((q) => {
-                              const answer = quizAnswers[String(q.id)];
-                              if (!answer) return null;
-                              return (
-                                <div key={q.id} className="bg-gray-50 rounded-lg px-3 py-2">
-                                  <p className="text-[10px] font-sans text-gray-400 leading-tight">{q.question}</p>
-                                  <p className="text-[12px] font-sans font-medium text-gray-700 mt-0.5">
-                                    {ANSWER_LABELS[answer] || answer}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-[11px] font-sans text-gray-300 italic">Nenhuma resposta registrada</p>
                         )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                );
-              })}
+                ))}
 
-              {colLeads.length === 0 && (
-                <p className="text-[11px] text-gray-300 font-sans text-center py-8">
-                  Arraste leads aqui
-                </p>
+                {colLeads.length === 0 && (
+                  <p className="text-[11px] text-gray-300 font-sans text-center py-8">
+                    Arraste leads aqui
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <Sheet open={!!selectedLead} onOpenChange={(open) => { if (!open) setSelectedLead(null); }}>
+        <SheetContent className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="font-sans text-lg">{selectedLead?.name || "Anônimo"}</SheetTitle>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-6">
+            {/* Lead info */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-sans font-semibold text-gray-400 uppercase tracking-wide">Informações</p>
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[12px] font-sans text-gray-400">E-mail</span>
+                  <span className="text-[12px] font-sans font-medium text-gray-700">{selectedLead?.email || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[12px] font-sans text-gray-400">Telefone</span>
+                  <span className="text-[12px] font-sans font-medium text-gray-700">{selectedLead?.phone || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[12px] font-sans text-gray-400">Parou em</span>
+                  <span className="text-[12px] font-sans font-medium text-gray-700">{selectedLead?.last_step || "—"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quiz answers */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-sans font-semibold text-gray-400 uppercase tracking-wide">Respostas do Quiz</p>
+              {Object.keys(sheetAnswers).length > 0 ? (
+                <div className="space-y-2">
+                  {quizQuestions.map((q) => {
+                    const answer = sheetAnswers[String(q.id)];
+                    if (!answer) return null;
+                    return (
+                      <div key={q.id} className="bg-gray-50 rounded-xl px-4 py-3">
+                        <p className="text-[11px] font-sans text-gray-400 leading-tight">{q.question}</p>
+                        <p className="text-[13px] font-sans font-medium text-gray-800 mt-1">
+                          {ANSWER_LABELS[answer] || answer}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-[12px] font-sans text-gray-300 italic py-4">Nenhuma resposta registrada</p>
               )}
             </div>
+
+            {/* WhatsApp CTA */}
+            {selectedLead?.phone && (
+              <button
+                onClick={() => openWhatsApp(selectedLead.phone!)}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-sans font-medium text-[13px] rounded-xl py-3 hover:bg-emerald-600 transition-colors"
+              >
+                <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4 brightness-0 invert" />
+                Entrar em contato via WhatsApp
+              </button>
+            )}
           </div>
-        );
-      })}
-    </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
