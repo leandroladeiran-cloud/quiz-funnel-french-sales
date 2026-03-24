@@ -227,7 +227,7 @@ const Admin = () => {
           {dropoffCards.map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
               <card.icon className="w-5 h-5 mb-2 text-destructive" />
-              <p className="text-2xl font-display font-bold text-destructive">{card.pct}</p>
+              <p className="text-2xl font-sans font-bold text-destructive">{card.pct}</p>
               <p className="text-sm font-sans text-muted-foreground">{card.label}</p>
             </div>
           ))}
