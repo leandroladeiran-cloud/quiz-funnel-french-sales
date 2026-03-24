@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -187,15 +187,23 @@ const Admin = () => {
     <div className="min-h-screen bg-[#fafafa]">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-2">
           <h1 className="text-[22px] font-sans font-bold text-gray-900">Painel Administrativo - Quiz</h1>
           <button
-            onClick={async () => {
-              if (!window.confirm("Tem certeza? Isso apagará TODOS os leads e eventos do funil.")) return;
-              const { error: e1 } = await supabase.from("leads").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-              const { error: e2 } = await supabase.from("funnel_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-              if (e1 || e2) { toast.error("Erro ao limpar dados"); console.error(e1, e2); }
-              else { toast.success("Dados limpos com sucesso!"); localStorage.removeItem("visitor_lead_id"); window.location.reload(); }
+            onClick={() => {
+              const input = window.prompt(
+                "⚠️ ATENÇÃO: Essa ação é IRREVERSÍVEL!\n\nTodos os leads, respostas e eventos do funil serão apagados permanentemente. Não há como recuperar.\n\nPara confirmar, digite DELETAR abaixo:"
+              );
+              if (input !== "DELETAR") {
+                if (input !== null) toast.error("Texto incorreto. Nenhum dado foi apagado.");
+                return;
+              }
+              (async () => {
+                const { error: e1 } = await supabase.from("leads").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                const { error: e2 } = await supabase.from("funnel_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                if (e1 || e2) { toast.error("Erro ao limpar dados"); console.error(e1, e2); }
+                else { toast.success("Dados limpos com sucesso!"); localStorage.removeItem("visitor_lead_id"); window.location.reload(); }
+              })();
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-sans font-medium border border-red-100 hover:bg-red-100 transition-colors"
           >
@@ -203,6 +211,7 @@ const Admin = () => {
             Limpar dados
           </button>
         </div>
+        <p className="text-[13px] font-sans text-gray-400 mb-8">Acompanhe a performance do seu fluxo de Quiz - Boas Vendas</p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
