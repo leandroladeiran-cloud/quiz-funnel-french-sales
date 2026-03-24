@@ -95,7 +95,26 @@ const Admin = () => {
   }
 
   const contactLeads = filteredLeads.filter((l) => l.name && l.email && l.phone);
-  const anonymousLeads = filteredLeads.filter((l) => !l.name || !l.email || !l.phone);
+
+  // Per-question abandonment: count leads whose last_step is each stage
+  const stepOrder = ["landing", "quiz_pergunta_1", "quiz_pergunta_2", "quiz_pergunta_3", "quiz_pergunta_4", "quiz_pergunta_5", "resultado", "pagina_vendas", "pre_checkout"];
+  const stoppedAt: Record<string, number> = {};
+  for (const step of stepOrder) {
+    stoppedAt[step] = filteredLeads.filter((l) => l.last_step === step).length;
+  }
+  const totalFiltered = filteredLeads.length || 1;
+
+  const questionDropoffs = [
+    { label: "Landing", stopped: stoppedAt["landing"], pct: ((stoppedAt["landing"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 1", stopped: stoppedAt["quiz_pergunta_1"], pct: ((stoppedAt["quiz_pergunta_1"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 2", stopped: stoppedAt["quiz_pergunta_2"], pct: ((stoppedAt["quiz_pergunta_2"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 3", stopped: stoppedAt["quiz_pergunta_3"], pct: ((stoppedAt["quiz_pergunta_3"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 4", stopped: stoppedAt["quiz_pergunta_4"], pct: ((stoppedAt["quiz_pergunta_4"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 5", stopped: stoppedAt["quiz_pergunta_5"], pct: ((stoppedAt["quiz_pergunta_5"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Resultado", stopped: stoppedAt["resultado"], pct: ((stoppedAt["resultado"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pág. Vendas", stopped: stoppedAt["pagina_vendas"], pct: ((stoppedAt["pagina_vendas"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pré-Checkout", stopped: stoppedAt["pre_checkout"], pct: ((stoppedAt["pre_checkout"] / totalFiltered) * 100).toFixed(1) },
+  ];
 
   const statCards = [
     { label: "Page Views", value: stats.pageViews, pct: "100%", icon: BarChart3, color: "bg-primary text-primary-foreground" },
