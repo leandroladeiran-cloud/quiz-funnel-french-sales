@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle, MapPin } from "lucide-react";
+import { BarChart3, Users, MousePointerClick, ShoppingCart, TrendingDown, MessageCircle, MapPin, CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format, subDays, subMonths, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import KanbanBoard from "@/components/admin/KanbanBoard";
 
 const STEP_LABELS: Record<string, string> = {
@@ -28,10 +34,17 @@ function getStepColor(step: string) {
   return "bg-muted text-muted-foreground";
 }
 
+type PresetRange = "24h" | "7d" | "30d" | "custom";
+
 const Admin = () => {
   const [stats, setStats] = useState<ReturnType<typeof getFunnelStats> extends Promise<infer T> ? T : never | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Date filter state
+  const [preset, setPreset] = useState<PresetRange>("7d");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
   useEffect(() => {
     const load = async () => {
@@ -42,6 +55,25 @@ const Admin = () => {
     };
     load();
   }, []);
+
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    if (preset === "24h") return { from: subDays(now, 1), to: now };
+    if (preset === "7d") return { from: subDays(now, 7), to: now };
+    if (preset === "30d") return { from: subMonths(now, 1), to: now };
+    // custom
+    return {
+      from: customFrom ? startOfDay(customFrom) : subDays(now, 7),
+      to: customTo ? endOfDay(customTo) : now,
+    };
+  }, [preset, customFrom, customTo]);
+
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l) => {
+      const d = new Date(l.created_at);
+      return isWithinInterval(d, { start: dateRange.from, end: dateRange.to });
+    });
+  }, [leads, dateRange]);
 
   const handleStatusChange = (leadId: string, status: LeadStatus) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status } : l)));
@@ -62,9 +94,8 @@ const Admin = () => {
     );
   }
 
-  // Separate leads with contact info vs anonymous visitors
-  const contactLeads = leads.filter((l) => l.name && l.email && l.phone);
-  const anonymousLeads = leads.filter((l) => !l.name || !l.email || !l.phone);
+  const contactLeads = filteredLeads.filter((l) => l.name && l.email && l.phone);
+  const anonymousLeads = filteredLeads.filter((l) => !l.name || !l.email || !l.phone);
 
   const statCards = [
     { label: "Page Views", value: stats.pageViews, pct: "100%", icon: BarChart3, color: "bg-primary text-primary-foreground" },
@@ -79,13 +110,88 @@ const Admin = () => {
     { label: "Abandono na Vendas", pct: `${stats.salesDropoffRate}%`, icon: TrendingDown },
   ];
 
+  const presetButtons: { label: string; value: PresetRange }[] = [
+    { label: "24h", value: "24h" },
+    { label: "7 dias", value: "7d" },
+    { label: "30 dias", value: "30d" },
+    { label: "Personalizado", value: "custom" },
+  ];
+
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
           Painel Administrativo
         </h1>
-        <p className="text-muted-foreground font-sans mb-8">Analytics do funil e leads capturados</p>
+        <p className="text-muted-foreground font-sans mb-6">Analytics do funil e leads capturados</p>
+
+        {/* Date Filter */}
+        <div className="bg-card border border-border rounded-xl p-4 mb-8">
+          <p className="text-sm font-sans font-semibold text-foreground mb-3 flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4" />
+            Filtrar por período
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {presetButtons.map((btn) => (
+              <Button
+                key={btn.value}
+                variant={preset === btn.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPreset(btn.value)}
+                className="font-sans"
+              >
+                {btn.label}
+              </Button>
+            ))}
+
+            {preset === "custom" && (
+              <div className="flex items-center gap-2 ml-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("font-sans", !customFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                      {customFrom ? format(customFrom, "dd/MM/yyyy") : "De"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customFrom}
+                      onSelect={setCustomFrom}
+                      locale={ptBR}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground text-sm">até</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("font-sans", !customTo && "text-muted-foreground")}>
+                      <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                      {customTo ? format(customTo, "dd/MM/yyyy") : "Até"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customTo}
+                      onSelect={setCustomTo}
+                      locale={ptBR}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground font-sans mt-2">
+            Mostrando {filteredLeads.length} lead(s) de {format(dateRange.from, "dd/MM/yyyy")} a {format(dateRange.to, "dd/MM/yyyy")}
+          </p>
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {statCards.map((card) => (
@@ -122,7 +228,7 @@ const Admin = () => {
         {contactLeads.length === 0 ? (
           <div className="text-center py-16 bg-card border border-border rounded-xl mb-10">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-sans">Nenhum lead com dados de contato ainda.</p>
+            <p className="text-muted-foreground font-sans">Nenhum lead com dados de contato neste período.</p>
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden mb-10">
@@ -188,7 +294,7 @@ const Admin = () => {
         {anonymousLeads.length === 0 ? (
           <div className="text-center py-16 bg-card border border-border rounded-xl">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-sans">Nenhum visitante anônimo registrado.</p>
+            <p className="text-muted-foreground font-sans">Nenhum visitante anônimo neste período.</p>
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
