@@ -139,7 +139,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+        <h1 className="text-3xl md:text-4xl font-sans font-bold text-foreground mb-2">
           Painel Administrativo
         </h1>
         <p className="text-muted-foreground font-sans mb-6">Analytics do funil e leads capturados</p>
