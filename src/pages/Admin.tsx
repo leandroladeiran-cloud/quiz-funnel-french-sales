@@ -233,7 +233,7 @@ const Admin = () => {
           ))}
         </div>
 
-        <h2 className="text-xl font-display font-bold text-foreground mb-3 flex items-center gap-2">
+        <h2 className="text-xl font-sans font-bold text-foreground mb-3 flex items-center gap-2">
           <TrendingDown className="w-5 h-5 text-destructive" />
           Abandono por Etapa do Funil
         </h2>
