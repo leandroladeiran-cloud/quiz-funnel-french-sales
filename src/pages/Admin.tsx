@@ -213,9 +213,9 @@ const Admin = () => {
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="font-sans text-[13px] capitalize text-gray-400 data-[state=active]:text-gray-900 data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-0 pb-2"
+                  className="font-sans text-[13px] uppercase tracking-wide text-gray-400 data-[state=active]:text-gray-900 data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-0 pb-2"
                 >
-                  {tab === "performance" ? "Performance" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "crm" ? "CRM" : tab === "performance" ? "Performance" : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </TabsTrigger>
               ))}
             </TabsList>
