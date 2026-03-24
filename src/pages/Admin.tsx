@@ -95,7 +95,26 @@ const Admin = () => {
   }
 
   const contactLeads = filteredLeads.filter((l) => l.name && l.email && l.phone);
-  const anonymousLeads = filteredLeads.filter((l) => !l.name || !l.email || !l.phone);
+
+  // Per-question abandonment: count leads whose last_step is each stage
+  const stepOrder = ["landing", "quiz_pergunta_1", "quiz_pergunta_2", "quiz_pergunta_3", "quiz_pergunta_4", "quiz_pergunta_5", "resultado", "pagina_vendas", "pre_checkout"];
+  const stoppedAt: Record<string, number> = {};
+  for (const step of stepOrder) {
+    stoppedAt[step] = filteredLeads.filter((l) => l.last_step === step).length;
+  }
+  const totalFiltered = filteredLeads.length || 1;
+
+  const questionDropoffs = [
+    { label: "Landing", stopped: stoppedAt["landing"], pct: ((stoppedAt["landing"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 1", stopped: stoppedAt["quiz_pergunta_1"], pct: ((stoppedAt["quiz_pergunta_1"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 2", stopped: stoppedAt["quiz_pergunta_2"], pct: ((stoppedAt["quiz_pergunta_2"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 3", stopped: stoppedAt["quiz_pergunta_3"], pct: ((stoppedAt["quiz_pergunta_3"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 4", stopped: stoppedAt["quiz_pergunta_4"], pct: ((stoppedAt["quiz_pergunta_4"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pergunta 5", stopped: stoppedAt["quiz_pergunta_5"], pct: ((stoppedAt["quiz_pergunta_5"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Resultado", stopped: stoppedAt["resultado"], pct: ((stoppedAt["resultado"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pág. Vendas", stopped: stoppedAt["pagina_vendas"], pct: ((stoppedAt["pagina_vendas"] / totalFiltered) * 100).toFixed(1) },
+    { label: "Pré-Checkout", stopped: stoppedAt["pre_checkout"], pct: ((stoppedAt["pre_checkout"] / totalFiltered) * 100).toFixed(1) },
+  ];
 
   const statCards = [
     { label: "Page Views", value: stats.pageViews, pct: "100%", icon: BarChart3, color: "bg-primary text-primary-foreground" },
@@ -204,7 +223,7 @@ const Admin = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {dropoffCards.map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
               <card.icon className="w-5 h-5 mb-2 text-destructive" />
@@ -212,6 +231,39 @@ const Admin = () => {
               <p className="text-sm font-sans text-muted-foreground">{card.label}</p>
             </div>
           ))}
+        </div>
+
+        <h2 className="text-xl font-display font-bold text-foreground mb-3 flex items-center gap-2">
+          <TrendingDown className="w-5 h-5 text-destructive" />
+          Abandono por Etapa do Funil
+        </h2>
+        <p className="text-sm text-muted-foreground font-sans mb-4">
+          Porcentagem de visitantes que pararam em cada etapa (período selecionado).
+        </p>
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-10">
+          {questionDropoffs.map((item) => {
+            const isHighDropoff = parseFloat(item.pct) > 15;
+            return (
+              <div
+                key={item.label}
+                className={`rounded-xl p-3 border text-center ${
+                  item.stopped === 0
+                    ? "bg-muted/30 border-border"
+                    : isHighDropoff
+                    ? "bg-destructive/10 border-destructive/30"
+                    : "bg-amber-500/10 border-amber-500/30"
+                }`}
+              >
+                <p className={`text-xl font-display font-bold ${
+                  item.stopped === 0 ? "text-muted-foreground" : isHighDropoff ? "text-destructive" : "text-amber-700"
+                }`}>
+                  {item.pct}%
+                </p>
+                <p className="text-[10px] font-sans text-muted-foreground leading-tight mt-1">{item.label}</p>
+                <p className="text-[10px] font-sans text-muted-foreground/60">{item.stopped} lead(s)</p>
+              </div>
+            );
+          })}
         </div>
 
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
