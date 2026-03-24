@@ -211,7 +211,6 @@ const Admin = () => {
             Limpar dados
           </button>
         </div>
-        <p className="text-[13px] font-sans text-gray-400 mb-8">Acompanhe a performance do seu fluxo de Quiz - Boas Vendas</p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
