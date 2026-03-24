@@ -403,8 +403,8 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* ===== KANBAN ===== */}
-          <TabsContent value="kanban" className="mt-0">
+          {/* ===== CRM ===== */}
+          <TabsContent value="crm" className="mt-0">
             <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
           </TabsContent>
 
