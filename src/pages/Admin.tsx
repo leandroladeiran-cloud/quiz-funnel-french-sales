@@ -223,7 +223,7 @@ const Admin = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {dropoffCards.map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
               <card.icon className="w-5 h-5 mb-2 text-destructive" />
@@ -231,6 +231,39 @@ const Admin = () => {
               <p className="text-sm font-sans text-muted-foreground">{card.label}</p>
             </div>
           ))}
+        </div>
+
+        <h2 className="text-xl font-display font-bold text-foreground mb-3 flex items-center gap-2">
+          <TrendingDown className="w-5 h-5 text-destructive" />
+          Abandono por Etapa do Funil
+        </h2>
+        <p className="text-sm text-muted-foreground font-sans mb-4">
+          Porcentagem de visitantes que pararam em cada etapa (período selecionado).
+        </p>
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 mb-10">
+          {questionDropoffs.map((item) => {
+            const isHighDropoff = parseFloat(item.pct) > 15;
+            return (
+              <div
+                key={item.label}
+                className={`rounded-xl p-3 border text-center ${
+                  item.stopped === 0
+                    ? "bg-muted/30 border-border"
+                    : isHighDropoff
+                    ? "bg-destructive/10 border-destructive/30"
+                    : "bg-amber-500/10 border-amber-500/30"
+                }`}
+              >
+                <p className={`text-xl font-display font-bold ${
+                  item.stopped === 0 ? "text-muted-foreground" : isHighDropoff ? "text-destructive" : "text-amber-700"
+                }`}>
+                  {item.pct}%
+                </p>
+                <p className="text-[10px] font-sans text-muted-foreground leading-tight mt-1">{item.label}</p>
+                <p className="text-[10px] font-sans text-muted-foreground/60">{item.stopped} lead(s)</p>
+              </div>
+            );
+          })}
         </div>
 
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
