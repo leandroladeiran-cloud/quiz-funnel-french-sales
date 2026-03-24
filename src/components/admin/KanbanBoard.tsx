@@ -1,6 +1,7 @@
 import { useState, type DragEvent } from "react";
 import { type Lead, type LeadStatus, updateLeadStatus } from "@/lib/funnel-tracking";
-import { GripVertical } from "lucide-react";
+import { GripVertical, X } from "lucide-react";
+import { quizQuestions } from "@/components/quiz/QuizData";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
 
 interface KanbanBoardProps {
@@ -14,9 +15,33 @@ const COLUMNS: { id: LeadStatus; label: string; bg: string; border: string; dot:
   { id: "nao_comprou", label: "Não Comprou", bg: "bg-red-50", border: "border-red-100", dot: "bg-red-400" },
 ];
 
+const ANSWER_LABELS: Record<string, string> = {
+  iniciante: "Nunca estudei",
+  basico: "Sei algumas palavras",
+  intermediario: "Conversa simples",
+  avancado: "Avançado",
+  viagem: "Viagem",
+  carreira: "Carreira",
+  morar: "Morar fora",
+  cultura: "Cultura",
+  "15min": "15 min/dia",
+  "30min": "30 min/dia",
+  "1hora": "1 hora/dia",
+  mais1hora: "+1 hora/dia",
+  video: "Vídeo-aulas",
+  conversacao: "Conversação",
+  exercicios: "Exercícios",
+  imersao: "Imersão total",
+  "3meses": "3 meses",
+  "6meses": "6 meses",
+  "1ano": "1 ano",
+  sempressa: "Sem pressa",
+};
+
 const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<LeadStatus | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -66,35 +91,75 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
             </div>
 
             <div className="space-y-2">
-              {colLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, lead.id)}
-                  onDragEnd={() => { setDraggedId(null); setDragOverCol(null); }}
-                  className={`bg-white border border-gray-100 rounded-xl p-3 cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all ${
-                    draggedId === lead.id ? "opacity-40" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <GripVertical className="w-3.5 h-3.5 text-gray-300 mt-0.5 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-sans font-medium text-gray-900 text-[13px] truncate">{lead.name}</p>
-                      <p className="font-sans text-gray-400 text-[11px] truncate">{lead.email}</p>
-                      <p className="font-sans text-gray-400 text-[11px]">{lead.phone}</p>
+              {colLeads.map((lead) => {
+                const isExpanded = expandedId === lead.id;
+                const quizAnswers = (lead.quiz_answers || {}) as Record<string, string>;
+                const hasAnswers = Object.keys(quizAnswers).length > 0;
+
+                return (
+                  <div
+                    key={lead.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, lead.id)}
+                    onDragEnd={() => { setDraggedId(null); setDragOverCol(null); }}
+                    className={`bg-white border border-gray-100 rounded-xl p-3 cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all ${
+                      draggedId === lead.id ? "opacity-40" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <GripVertical className="w-3.5 h-3.5 text-gray-300 mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : lead.id); }}
+                          className="font-sans font-medium text-gray-900 text-[13px] truncate block text-left hover:text-blue-600 transition-colors w-full"
+                        >
+                          {lead.name || "Anônimo"}
+                        </button>
+                        <p className="font-sans text-gray-400 text-[11px] truncate">{lead.email}</p>
+                        <p className="font-sans text-gray-400 text-[11px]">{lead.phone}</p>
+                      </div>
+                      {lead.phone && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
+                          className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
+                          title="Abrir WhatsApp"
+                        >
+                          <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
-                    {lead.phone && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
-                        className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
-                        title="Abrir WhatsApp"
-                      >
-                        <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
-                      </button>
+
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] font-sans font-semibold text-gray-500 uppercase tracking-wide">Respostas do Quiz</p>
+                          <button onClick={(e) => { e.stopPropagation(); setExpandedId(null); }} className="text-gray-300 hover:text-gray-500">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {hasAnswers ? (
+                          <div className="space-y-1.5">
+                            {quizQuestions.map((q) => {
+                              const answer = quizAnswers[String(q.id)];
+                              if (!answer) return null;
+                              return (
+                                <div key={q.id} className="bg-gray-50 rounded-lg px-3 py-2">
+                                  <p className="text-[10px] font-sans text-gray-400 leading-tight">{q.question}</p>
+                                  <p className="text-[12px] font-sans font-medium text-gray-700 mt-0.5">
+                                    {ANSWER_LABELS[answer] || answer}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] font-sans text-gray-300 italic">Nenhuma resposta registrada</p>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {colLeads.length === 0 && (
                 <p className="text-[11px] text-gray-300 font-sans text-center py-8">
