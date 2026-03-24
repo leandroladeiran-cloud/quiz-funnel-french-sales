@@ -427,23 +427,6 @@ const Admin = () => {
 
           {/* ===== PERFORMANCE ===== */}
           <TabsContent value="performance" className="mt-0">
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-white rounded-2xl p-5 border border-red-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center mb-3">
-                  <TrendingDown className="w-4 h-4 text-red-500" />
-                </div>
-                <p className="text-[28px] font-sans font-bold text-gray-900 leading-none mb-1">{stats.quizDropoffRate}%</p>
-                <p className="text-[12px] font-sans text-gray-400">Abandono no Quiz</p>
-              </div>
-              <div className="bg-white rounded-2xl p-5 border border-amber-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
-                  <TrendingDown className="w-4 h-4 text-amber-500" />
-                </div>
-                <p className="text-[28px] font-sans font-bold text-gray-900 leading-none mb-1">{stats.salesDropoffRate}%</p>
-                <p className="text-[12px] font-sans text-gray-400">Abandono na Vendas</p>
-              </div>
-            </div>
-
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <p className="text-[13px] font-sans font-semibold text-gray-900 mb-5">Abandono por Etapa</p>
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
@@ -463,14 +446,6 @@ const Admin = () => {
                     </div>
                   );
                 })}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] mt-6">
-              <p className="text-[13px] font-sans font-semibold text-gray-900 mb-3">Como calculamos</p>
-              <div className="space-y-2 text-[12px] font-sans text-gray-500 leading-relaxed">
-                <p><span className="font-medium text-gray-700">Abandono no Quiz:</span> pessoas que iniciaram o quiz (quiz_start) mas não completaram (quiz_complete). Fórmula: (quizStarts − quizCompletes) / quizStarts × 100</p>
-                <p><span className="font-medium text-gray-700">Abandono nas Vendas:</span> pessoas que viram a página de vendas (sales_view) mas não chegaram ao pré-checkout (pre_checkout). Fórmula: (salesViews − preCheckouts) / salesViews × 100</p>
               </div>
             </div>
           </TabsContent>
