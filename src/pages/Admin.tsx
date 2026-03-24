@@ -209,7 +209,7 @@ const Admin = () => {
         <Tabs defaultValue="respostas" className="w-full">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <TabsList className="bg-transparent p-0 h-auto gap-6">
-              {["respostas", "leads", "kanban", "performance"].map((tab) => (
+              {["respostas", "leads", "crm", "performance"].map((tab) => (
                 <TabsTrigger
                   key={tab}
                   value={tab}
