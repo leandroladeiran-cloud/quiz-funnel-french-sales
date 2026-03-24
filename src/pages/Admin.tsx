@@ -266,7 +266,7 @@ const Admin = () => {
           })}
         </div>
 
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+        <h2 className="text-2xl font-sans font-bold text-foreground mb-4">
           Kanban de Leads ({contactLeads.length})
         </h2>
         <div className="mb-10">
