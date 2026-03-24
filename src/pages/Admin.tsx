@@ -185,7 +185,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
         {/* Header */}
-        <h1 className="text-2xl font-sans font-bold text-foreground mb-8">Overview</h1>
+        <h1 className="text-2xl font-sans font-bold text-foreground mb-8">Painel Administrativo - Quiz</h1>
 
         {/* Top stat cards — pastel style like reference */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
