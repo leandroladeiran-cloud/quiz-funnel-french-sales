@@ -254,7 +254,7 @@ const Admin = () => {
                     : "bg-amber-500/10 border-amber-500/30"
                 }`}
               >
-                <p className={`text-xl font-display font-bold ${
+                <p className={`text-xl font-sans font-bold ${
                   item.stopped === 0 ? "text-muted-foreground" : isHighDropoff ? "text-destructive" : "text-amber-700"
                 }`}>
                   {item.pct}%
