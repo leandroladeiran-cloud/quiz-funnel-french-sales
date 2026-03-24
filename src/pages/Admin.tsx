@@ -188,7 +188,7 @@ const Admin = () => {
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-[22px] font-sans font-bold text-gray-900">Painel Administrativo - Quiz</h1>
+          <h1 className="text-[22px] font-sans font-bold text-gray-900">Acompanhe a performance do seu fluxo de Quiz - Boas Vendas</h1>
           <button
             onClick={() => {
               const input = window.prompt(
@@ -211,7 +211,6 @@ const Admin = () => {
             Limpar dados
           </button>
         </div>
-        <p className="text-[13px] font-sans text-gray-400 mb-8">Acompanhe a performance do seu fluxo de Quiz - Boas Vendas</p>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
