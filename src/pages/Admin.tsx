@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { getFunnelStats, getLeads, type Lead, type LeadStatus } from "@/lib/funnel-tracking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Eye, UserPlus, MousePointerClick, UserCheck, MessageSquare, MessageCircle, TrendingDown, CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -29,11 +28,11 @@ function getStepLabel(step: string) {
 }
 
 function getStepBadge(step: string) {
-  if (step === "pre_checkout") return "bg-emerald-100 text-emerald-700 border-emerald-200";
-  if (step === "pagina_vendas") return "bg-blue-100 text-blue-700 border-blue-200";
-  if (step === "resultado") return "bg-violet-100 text-violet-700 border-violet-200";
-  if (step.startsWith("quiz_")) return "bg-amber-100 text-amber-700 border-amber-200";
-  return "bg-muted text-muted-foreground border-border";
+  if (step === "pre_checkout") return "bg-emerald-50 text-emerald-600";
+  if (step === "pagina_vendas") return "bg-blue-50 text-blue-600";
+  if (step === "resultado") return "bg-violet-50 text-violet-600";
+  if (step.startsWith("quiz_")) return "bg-amber-50 text-amber-600";
+  return "bg-gray-50 text-gray-500";
 }
 
 const ANSWER_LABELS: Record<string, string> = {
@@ -63,22 +62,22 @@ function getAnswerLabel(value: string) {
   return ANSWER_LABELS[value] || value;
 }
 
-// Pastel colors for each question column — creates a visual "heat map" of funnel progress
-const QUESTION_COLORS = [
-  { bg: "bg-violet-50", header: "bg-violet-100", text: "text-violet-700", filled: "bg-violet-100 text-violet-800", border: "border-violet-200" },
-  { bg: "bg-sky-50", header: "bg-sky-100", text: "text-sky-700", filled: "bg-sky-100 text-sky-800", border: "border-sky-200" },
-  { bg: "bg-emerald-50", header: "bg-emerald-100", text: "text-emerald-700", filled: "bg-emerald-100 text-emerald-800", border: "border-emerald-200" },
-  { bg: "bg-amber-50", header: "bg-amber-100", text: "text-amber-700", filled: "bg-amber-100 text-amber-800", border: "border-amber-200" },
-  { bg: "bg-rose-50", header: "bg-rose-100", text: "text-rose-700", filled: "bg-rose-100 text-rose-800", border: "border-rose-200" },
+// Soft pastel column colors for the response heat map
+const COL_COLORS = [
+  { header: "bg-[#f3f0ff]", filled: "bg-[#ede9fe] text-[#6d28d9]", empty: "" },
+  { header: "bg-[#ecfdf5]", filled: "bg-[#d1fae5] text-[#047857]", empty: "" },
+  { header: "bg-[#fefce8]", filled: "bg-[#fef9c3] text-[#a16207]", empty: "" },
+  { header: "bg-[#fff1f2]", filled: "bg-[#ffe4e6] text-[#be123c]", empty: "" },
+  { header: "bg-[#eff6ff]", filled: "bg-[#dbeafe] text-[#1d4ed8]", empty: "" },
 ];
 
-// Stat card pastel backgrounds
-const STAT_CARD_STYLES = [
-  "bg-violet-50 border-violet-100",
-  "bg-sky-50 border-sky-100",
-  "bg-emerald-50 border-emerald-100",
-  "bg-amber-50 border-amber-100",
-  "bg-rose-50 border-rose-100",
+// Stat card styles matching reference — very light pastel with subtle border
+const CARD_STYLES = [
+  { bg: "bg-white", border: "border-[#e8e5f0]", iconBg: "bg-[#f3f0ff]", iconColor: "text-[#7c3aed]" },
+  { bg: "bg-white", border: "border-[#d5f0e3]", iconBg: "bg-[#ecfdf5]", iconColor: "text-[#059669]" },
+  { bg: "bg-white", border: "border-[#fde68a]", iconBg: "bg-[#fefce8]", iconColor: "text-[#d97706]" },
+  { bg: "bg-white", border: "border-[#fecdd3]", iconBg: "bg-[#fff1f2]", iconColor: "text-[#e11d48]" },
+  { bg: "bg-white", border: "border-[#bfdbfe]", iconBg: "bg-[#eff6ff]", iconColor: "text-[#2563eb]" },
 ];
 
 type PresetRange = "24h" | "7d" | "30d" | "custom";
@@ -131,8 +130,8 @@ const Admin = () => {
 
   if (loading || !stats) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-sans text-sm">Carregando...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-400 font-sans text-sm">Carregando...</p>
       </div>
     );
   }
@@ -182,53 +181,55 @@ const Admin = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
+    <div className="min-h-screen bg-[#fafafa]">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         {/* Header */}
-        <h1 className="text-2xl font-sans font-bold text-foreground mb-8">Painel Administrativo - Quiz</h1>
+        <h1 className="text-[22px] font-sans font-bold text-gray-900 mb-8">Painel Administrativo - Quiz</h1>
 
-        {/* Top stat cards — pastel style like reference */}
+        {/* Stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {topStats.map((s, i) => (
-            <div key={s.label} className={`rounded-2xl p-5 border ${STAT_CARD_STYLES[i]} transition-shadow hover:shadow-md`}>
-              <p className="text-xs font-sans text-muted-foreground mb-3">{s.label}</p>
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <s.icon className="w-5 h-5 text-muted-foreground/60" />
-                <p className="text-3xl font-sans font-bold text-foreground tracking-tight">{s.value}</p>
+          {topStats.map((s, i) => {
+            const style = CARD_STYLES[i];
+            return (
+              <div key={s.label} className={`${style.bg} rounded-2xl p-5 border ${style.border} shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow`}>
+                <p className="text-[11px] font-sans text-gray-400 uppercase tracking-wide mb-3">{s.label}</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-8 h-8 rounded-lg ${style.iconBg} flex items-center justify-center`}>
+                    <s.icon className={`w-4 h-4 ${style.iconColor}`} />
+                  </div>
+                  <p className="text-[28px] font-sans font-bold text-gray-900 leading-none">{s.value}</p>
+                </div>
+                <p className="text-[11px] font-sans text-gray-400">{s.sub}</p>
               </div>
-              <p className="text-[11px] font-sans text-muted-foreground">{s.sub}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Tabs + time filter */}
+        {/* Tabs + Time filter */}
         <Tabs defaultValue="respostas" className="w-full">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3 mb-6">
-            <TabsList className="bg-transparent p-0 h-auto gap-0">
-              <TabsTrigger value="respostas" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
-                Respostas
-              </TabsTrigger>
-              <TabsTrigger value="leads" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
-                Leads
-              </TabsTrigger>
-              <TabsTrigger value="kanban" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
-                Kanban
-              </TabsTrigger>
-              <TabsTrigger value="abandono" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
-                Performance
-              </TabsTrigger>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <TabsList className="bg-transparent p-0 h-auto gap-6">
+              {["respostas", "leads", "kanban", "performance"].map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="font-sans text-[13px] capitalize text-gray-400 data-[state=active]:text-gray-900 data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-0 pb-2"
+                >
+                  {tab === "performance" ? "Performance" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
               {presetButtons.map((btn) => (
                 <button
                   key={btn.value}
                   onClick={() => setPreset(btn.value)}
                   className={cn(
-                    "font-sans text-sm px-3 py-1.5 rounded-md transition-all",
+                    "font-sans text-[13px] px-3.5 py-1.5 rounded-md transition-all",
                     preset === btn.value
-                      ? "bg-card text-foreground font-semibold shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-white text-gray-900 font-medium shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                   )}
                 >
                   {btn.label}
@@ -239,10 +240,10 @@ const Admin = () => {
                   <button
                     onClick={() => setPreset("custom")}
                     className={cn(
-                      "font-sans text-sm px-3 py-1.5 rounded-md transition-all flex items-center gap-1",
+                      "font-sans text-[13px] px-3 py-1.5 rounded-md transition-all flex items-center gap-1",
                       preset === "custom"
-                        ? "bg-card text-foreground font-semibold shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-gray-900 font-medium shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
                     )}
                   >
                     <CalendarIcon className="w-3.5 h-3.5" />
@@ -252,11 +253,11 @@ const Admin = () => {
                 <PopoverContent className="w-auto p-0" align="end">
                   <div className="flex gap-2 p-2">
                     <div>
-                      <p className="text-xs font-sans text-muted-foreground px-3 py-1">De</p>
+                      <p className="text-[11px] font-sans text-gray-400 px-3 py-1">De</p>
                       <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setPreset("custom"); }} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
                     </div>
                     <div>
-                      <p className="text-xs font-sans text-muted-foreground px-3 py-1">Até</p>
+                      <p className="text-[11px] font-sans text-gray-400 px-3 py-1">Até</p>
                       <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setPreset("custom"); }} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
                     </div>
                   </div>
@@ -265,23 +266,25 @@ const Admin = () => {
             </div>
           </div>
 
-          {/* ===== RESPOSTAS TAB ===== */}
+          {/* ===== RESPOSTAS ===== */}
           <TabsContent value="respostas" className="mt-0">
-            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    {/* Question headers with colored backgrounds and completion % */}
-                    <TableRow className="border-b-0">
-                      <TableHead className="font-sans text-xs text-muted-foreground bg-muted/30 w-10 border-r border-border">—</TableHead>
-                      <TableHead className="font-sans text-xs text-muted-foreground bg-muted/30 min-w-[120px] border-r border-border">Entrada</TableHead>
+                    <TableRow className="border-b border-gray-100">
+                      <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide bg-gray-50/50 w-10 border-r border-gray-100">—</TableHead>
+                      <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide bg-gray-50/50 min-w-[110px] border-r border-gray-100">Entrada</TableHead>
                       {questionSteps.map((qs, i) => {
-                        const color = QUESTION_COLORS[i];
+                        const color = COL_COLORS[i];
                         return (
-                          <TableHead key={i} className={`font-sans text-xs min-w-[160px] border-r border-border ${color.header}`}>
-                            <div className="flex items-center justify-between">
-                              <span className={`font-semibold ${color.text}`}>{i + 1} {qs.question.question.split("?")[0].slice(0, 20)}…</span>
-                              <span className={`text-sm font-bold ${color.text}`}>{qs.rate}%</span>
+                          <TableHead key={i} className={`font-sans text-[11px] min-w-[150px] border-r border-gray-100 ${color.header}`}>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-gray-600">
+                                <span className="font-bold text-gray-900">{i + 1}</span>
+                                {" "}{qs.question.question.split("?")[0].slice(0, 18)}…
+                              </span>
+                              <span className="text-[13px] font-bold text-gray-900">{qs.rate}%</span>
                             </div>
                           </TableHead>
                         );
@@ -291,7 +294,7 @@ const Admin = () => {
                   <TableBody>
                     {filteredLeads.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={2 + quizQuestions.length} className="text-center py-16 text-muted-foreground font-sans text-sm">
+                        <TableCell colSpan={2 + quizQuestions.length} className="text-center py-20 text-gray-400 font-sans text-sm">
                           Nenhum lead neste período.
                         </TableCell>
                       </TableRow>
@@ -299,23 +302,21 @@ const Admin = () => {
                       filteredLeads.map((lead, index) => {
                         const answers = (lead.quiz_answers || {}) as Record<string, string>;
                         return (
-                          <TableRow key={lead.id} className="hover:bg-muted/20 transition-colors">
-                            <TableCell className="font-sans text-xs text-muted-foreground border-r border-border text-center">{index + 1}</TableCell>
-                            <TableCell className="font-sans border-r border-border">
-                              <p className="text-xs font-mono text-muted-foreground">{lead.id.slice(0, 6)}</p>
-                              <p className="text-[10px] text-muted-foreground">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</p>
+                          <TableRow key={lead.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                            <TableCell className="font-sans text-[12px] text-gray-400 border-r border-gray-100 text-center">{index + 1}</TableCell>
+                            <TableCell className="font-sans border-r border-gray-100">
+                              <p className="text-[12px] font-mono text-gray-500">{lead.id.slice(0, 6)}</p>
+                              <p className="text-[10px] text-gray-400">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</p>
                             </TableCell>
                             {quizQuestions.map((q, i) => {
                               const ans = answers[String(q.id)];
-                              const color = QUESTION_COLORS[i];
+                              const color = COL_COLORS[i];
                               return (
-                                <TableCell key={q.id} className={`font-sans text-xs border-r border-border ${ans ? color.bg : ""}`}>
+                                <TableCell key={q.id} className={`font-sans text-[12px] border-r border-gray-100 ${ans ? color.filled : ""}`}>
                                   {ans ? (
-                                    <span className={`inline-block px-2 py-1 rounded-md text-[11px] font-medium ${color.filled}`}>
-                                      {getAnswerLabel(ans)}
-                                    </span>
+                                    <span className="font-medium">{getAnswerLabel(ans)}</span>
                                   ) : (
-                                    <span className="text-muted-foreground/30">—</span>
+                                    <span className="text-gray-300">—</span>
                                   )}
                                 </TableCell>
                               );
@@ -330,68 +331,68 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* ===== LEADS TAB ===== */}
+          {/* ===== LEADS ===== */}
           <TabsContent value="leads" className="mt-0">
-            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-sans text-xs">Nome</TableHead>
-                    <TableHead className="font-sans text-xs">E-mail</TableHead>
-                    <TableHead className="font-sans text-xs">Telefone</TableHead>
-                    <TableHead className="font-sans text-xs">Status</TableHead>
-                    <TableHead className="font-sans text-xs">Parou em</TableHead>
-                    <TableHead className="font-sans text-xs">Data</TableHead>
-                    <TableHead className="font-sans text-xs text-right">Ação</TableHead>
+                  <TableRow className="border-b border-gray-100">
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">Nome</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">E-mail</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">Telefone</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">Status</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">Parou em</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide">Data</TableHead>
+                    <TableHead className="font-sans text-[11px] text-gray-400 uppercase tracking-wide text-right">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredLeads.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-16 text-muted-foreground font-sans text-sm">
+                      <TableCell colSpan={7} className="text-center py-20 text-gray-400 font-sans text-sm">
                         Nenhum lead neste período.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="font-sans text-sm font-semibold text-foreground">
-                          {lead.name || <span className="text-muted-foreground italic text-xs">Anônimo</span>}
+                      <TableRow key={lead.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <TableCell className="font-sans text-[13px] font-medium text-gray-900">
+                          {lead.name || <span className="text-gray-400 italic text-[12px]">Anônimo</span>}
                         </TableCell>
-                        <TableCell className="font-sans text-sm text-muted-foreground">
-                          {lead.email || <span className="italic text-xs">—</span>}
+                        <TableCell className="font-sans text-[13px] text-gray-500">
+                          {lead.email || <span className="text-gray-300">—</span>}
                         </TableCell>
-                        <TableCell className="font-sans text-sm text-muted-foreground">
-                          {lead.phone || <span className="italic text-xs">—</span>}
+                        <TableCell className="font-sans text-[13px] text-gray-500">
+                          {lead.phone || <span className="text-gray-300">—</span>}
                         </TableCell>
-                        <TableCell className="font-sans text-sm">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${
-                            lead.status === "comprou" ? "bg-emerald-100 text-emerald-700" :
-                            lead.status === "nao_comprou" ? "bg-rose-100 text-rose-700" :
-                            "bg-amber-100 text-amber-700"
+                        <TableCell>
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-medium ${
+                            lead.status === "comprou" ? "bg-emerald-50 text-emerald-600" :
+                            lead.status === "nao_comprou" ? "bg-red-50 text-red-600" :
+                            "bg-amber-50 text-amber-600"
                           }`}>
                             {lead.status === "comprou" ? "Comprou" : lead.status === "nao_comprou" ? "Não Comprou" : "Aguardando"}
                           </span>
                         </TableCell>
-                        <TableCell className="font-sans text-sm">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold border ${getStepBadge(lead.last_step)}`}>
+                        <TableCell>
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-medium ${getStepBadge(lead.last_step)}`}>
                             {getStepLabel(lead.last_step)}
                           </span>
                         </TableCell>
-                        <TableCell className="font-sans text-muted-foreground text-sm">
+                        <TableCell className="font-sans text-[13px] text-gray-400">
                           {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell className="text-right">
                           {lead.phone ? (
                             <button
                               onClick={() => openWhatsApp(lead.phone!)}
-                              className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                              className="inline-flex items-center gap-1.5 text-[12px] font-sans font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
                             >
-                              <MessageCircle className="w-4 h-4" />
+                              <MessageCircle className="w-3.5 h-3.5" />
                               WhatsApp
                             </button>
                           ) : (
-                            <span className="text-xs text-muted-foreground/40">—</span>
+                            <span className="text-gray-300 text-[12px]">—</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -402,42 +403,46 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* ===== KANBAN TAB ===== */}
+          {/* ===== KANBAN ===== */}
           <TabsContent value="kanban" className="mt-0">
             <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
           </TabsContent>
 
-          {/* ===== PERFORMANCE / ABANDONO TAB ===== */}
-          <TabsContent value="abandono" className="mt-0">
+          {/* ===== PERFORMANCE ===== */}
+          <TabsContent value="performance" className="mt-0">
             <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="rounded-2xl p-5 bg-rose-50 border border-rose-100">
-                <TrendingDown className="w-5 h-5 mb-2 text-rose-500" />
-                <p className="text-3xl font-sans font-bold text-rose-700 tracking-tight">{stats.quizDropoffRate}%</p>
-                <p className="text-sm font-sans text-muted-foreground mt-1">Abandono no Quiz</p>
+              <div className="bg-white rounded-2xl p-5 border border-red-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center mb-3">
+                  <TrendingDown className="w-4 h-4 text-red-500" />
+                </div>
+                <p className="text-[28px] font-sans font-bold text-gray-900 leading-none mb-1">{stats.quizDropoffRate}%</p>
+                <p className="text-[12px] font-sans text-gray-400">Abandono no Quiz</p>
               </div>
-              <div className="rounded-2xl p-5 bg-amber-50 border border-amber-100">
-                <TrendingDown className="w-5 h-5 mb-2 text-amber-500" />
-                <p className="text-3xl font-sans font-bold text-amber-700 tracking-tight">{stats.salesDropoffRate}%</p>
-                <p className="text-sm font-sans text-muted-foreground mt-1">Abandono na Vendas</p>
+              <div className="bg-white rounded-2xl p-5 border border-amber-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
+                  <TrendingDown className="w-4 h-4 text-amber-500" />
+                </div>
+                <p className="text-[28px] font-sans font-bold text-gray-900 leading-none mb-1">{stats.salesDropoffRate}%</p>
+                <p className="text-[12px] font-sans text-gray-400">Abandono na Vendas</p>
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-              <p className="text-sm font-sans font-semibold text-foreground mb-5">Abandono por Etapa</p>
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <p className="text-[13px] font-sans font-semibold text-gray-900 mb-5">Abandono por Etapa</p>
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
-                {stepOrder.map((step, i) => {
+                {stepOrder.map((step) => {
                   const stopped = stoppedAt[step] || 0;
                   const pct = ((stopped / totalFiltered) * 100).toFixed(1);
                   const isHigh = parseFloat(pct) > 15;
                   return (
-                    <div key={step} className={`rounded-xl p-3 border text-center transition-shadow hover:shadow-sm ${
-                      stopped === 0 ? "bg-muted/20 border-border" : isHigh ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-200"
+                    <div key={step} className={`rounded-xl p-3 border text-center ${
+                      stopped === 0 ? "bg-gray-50 border-gray-100" : isHigh ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"
                     }`}>
-                      <p className={`text-lg font-sans font-bold ${
-                        stopped === 0 ? "text-muted-foreground/40" : isHigh ? "text-rose-700" : "text-amber-700"
+                      <p className={`text-[18px] font-sans font-bold ${
+                        stopped === 0 ? "text-gray-300" : isHigh ? "text-red-600" : "text-amber-600"
                       }`}>{pct}%</p>
-                      <p className="text-[10px] font-sans text-muted-foreground leading-tight mt-1">{getStepLabel(step)}</p>
-                      <p className="text-[10px] font-sans text-muted-foreground/50">{stopped}</p>
+                      <p className="text-[10px] font-sans text-gray-400 leading-tight mt-1">{getStepLabel(step)}</p>
+                      <p className="text-[10px] font-sans text-gray-300">{stopped}</p>
                     </div>
                   );
                 })}
