@@ -139,7 +139,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+        <h1 className="text-3xl md:text-4xl font-sans font-bold text-foreground mb-2">
           Painel Administrativo
         </h1>
         <p className="text-muted-foreground font-sans mb-6">Analytics do funil e leads capturados</p>
@@ -216,7 +216,7 @@ const Admin = () => {
           {statCards.map((card) => (
             <div key={card.label} className={`rounded-xl p-4 ${card.color} border border-border`}>
               <card.icon className="w-5 h-5 mb-2 opacity-70" />
-              <p className="text-2xl font-display font-bold">{card.value}</p>
+              <p className="text-2xl font-sans font-bold">{card.value}</p>
               <p className="text-xs font-sans opacity-70">{card.label}</p>
               <p className="text-sm font-sans font-semibold mt-1">{card.pct}</p>
             </div>
@@ -227,13 +227,13 @@ const Admin = () => {
           {dropoffCards.map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
               <card.icon className="w-5 h-5 mb-2 text-destructive" />
-              <p className="text-2xl font-display font-bold text-destructive">{card.pct}</p>
+              <p className="text-2xl font-sans font-bold text-destructive">{card.pct}</p>
               <p className="text-sm font-sans text-muted-foreground">{card.label}</p>
             </div>
           ))}
         </div>
 
-        <h2 className="text-xl font-display font-bold text-foreground mb-3 flex items-center gap-2">
+        <h2 className="text-xl font-sans font-bold text-foreground mb-3 flex items-center gap-2">
           <TrendingDown className="w-5 h-5 text-destructive" />
           Abandono por Etapa do Funil
         </h2>
@@ -254,7 +254,7 @@ const Admin = () => {
                     : "bg-amber-500/10 border-amber-500/30"
                 }`}
               >
-                <p className={`text-xl font-display font-bold ${
+                <p className={`text-xl font-sans font-bold ${
                   item.stopped === 0 ? "text-muted-foreground" : isHighDropoff ? "text-destructive" : "text-amber-700"
                 }`}>
                   {item.pct}%
@@ -266,14 +266,14 @@ const Admin = () => {
           })}
         </div>
 
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+        <h2 className="text-2xl font-sans font-bold text-foreground mb-4">
           Kanban de Leads ({contactLeads.length})
         </h2>
         <div className="mb-10">
           <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
         </div>
 
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+        <h2 className="text-2xl font-sans font-bold text-foreground mb-4">
           Todos os Leads ({filteredLeads.length})
         </h2>
 

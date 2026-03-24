@@ -66,7 +66,7 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
             }`}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display font-bold text-foreground text-sm">{col.label}</h3>
+              <h3 className="font-sans font-bold text-foreground text-sm">{col.label}</h3>
               <span className="text-xs font-sans bg-background/60 rounded-full px-2 py-0.5 text-muted-foreground">
                 {colLeads.length}
               </span>
