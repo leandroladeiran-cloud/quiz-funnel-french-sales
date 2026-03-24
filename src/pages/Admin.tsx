@@ -222,16 +222,16 @@ const Admin = () => {
         </div>
 
         <h2 className="text-2xl font-display font-bold text-foreground mb-4">
-          Leads com Contato ({contactLeads.length})
+          Todos os Leads ({filteredLeads.length})
         </h2>
 
-        {contactLeads.length === 0 ? (
-          <div className="text-center py-16 bg-card border border-border rounded-xl mb-10">
+        {filteredLeads.length === 0 ? (
+          <div className="text-center py-16 bg-card border border-border rounded-xl">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-sans">Nenhum lead com dados de contato neste período.</p>
+            <p className="text-muted-foreground font-sans">Nenhum lead neste período.</p>
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden mb-10">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -239,17 +239,23 @@ const Admin = () => {
                   <TableHead className="font-sans">E-mail</TableHead>
                   <TableHead className="font-sans">Telefone</TableHead>
                   <TableHead className="font-sans">Status</TableHead>
-                  <TableHead className="font-sans">Última Etapa</TableHead>
+                  <TableHead className="font-sans">Parou em</TableHead>
                   <TableHead className="font-sans">Data</TableHead>
                   <TableHead className="font-sans text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contactLeads.map((lead) => (
-                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openWhatsApp(lead.phone!)}>
-                    <TableCell className="font-sans font-semibold text-foreground">{lead.name}</TableCell>
-                    <TableCell className="font-sans text-muted-foreground">{lead.email}</TableCell>
-                    <TableCell className="font-sans text-muted-foreground">{lead.phone}</TableCell>
+                {filteredLeads.map((lead) => (
+                  <TableRow key={lead.id} className="hover:bg-muted/50">
+                    <TableCell className="font-sans font-semibold text-foreground">
+                      {lead.name || <span className="text-muted-foreground italic text-xs">Anônimo</span>}
+                    </TableCell>
+                    <TableCell className="font-sans text-muted-foreground">
+                      {lead.email || <span className="italic text-xs">—</span>}
+                    </TableCell>
+                    <TableCell className="font-sans text-muted-foreground">
+                      {lead.phone || <span className="italic text-xs">—</span>}
+                    </TableCell>
                     <TableCell className="font-sans text-sm">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
                         lead.status === "comprou" ? "bg-emerald-500/20 text-emerald-700" :
@@ -268,57 +274,17 @@ const Admin = () => {
                       {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openWhatsApp(lead.phone!); }}
-                        className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-accent hover:underline"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4 flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-muted-foreground" />
-          Visitantes Anônimos ({anonymousLeads.length})
-        </h2>
-        <p className="text-sm text-muted-foreground font-sans mb-4">
-          Visitantes que não preencheram os dados — veja onde pararam no funil.
-        </p>
-
-        {anonymousLeads.length === 0 ? (
-          <div className="text-center py-16 bg-card border border-border rounded-xl">
-            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-sans">Nenhum visitante anônimo neste período.</p>
-          </div>
-        ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-sans">ID (parcial)</TableHead>
-                  <TableHead className="font-sans">Parou em</TableHead>
-                  <TableHead className="font-sans">Data</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {anonymousLeads.map((lead) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="font-sans text-muted-foreground font-mono text-xs">
-                      {lead.id.slice(0, 8)}…
-                    </TableCell>
-                    <TableCell className="font-sans text-sm">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStepColor(lead.last_step)}`}>
-                        {getStepLabel(lead.last_step)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-sans text-muted-foreground text-sm">
-                      {new Date(lead.created_at).toLocaleDateString("pt-BR")}
+                      {lead.phone ? (
+                        <button
+                          onClick={() => openWhatsApp(lead.phone!)}
+                          className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-accent hover:underline"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          WhatsApp
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Sem telefone</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
