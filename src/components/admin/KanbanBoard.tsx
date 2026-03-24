@@ -1,6 +1,7 @@
 import { useState, type DragEvent } from "react";
 import { type Lead, type LeadStatus, updateLeadStatus } from "@/lib/funnel-tracking";
-import { MessageCircle, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import whatsappIcon from "@/assets/whatsapp-icon.png";
 
 interface KanbanBoardProps {
   leads: Lead[];
