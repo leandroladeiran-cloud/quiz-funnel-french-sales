@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { trackEvent, ensureVisitorLead, updateVisitorStep } from "@/lib/funnel-tracking";
+import { trackEvent, ensureVisitorLead, updateVisitorStep, saveQuizAnswer } from "@/lib/funnel-tracking";
 import { motion } from "framer-motion";
 import { quizQuestions, getQuizResult } from "@/components/quiz/QuizData";
 import QuizProgress from "@/components/quiz/QuizProgress";
@@ -27,11 +27,15 @@ const Index = () => {
   }, []);
 
   const handleAnswer = useCallback((value: string) => {
-    const newAnswers = { ...answers, [quizQuestions[currentQuestion].id]: value };
+    const questionId = quizQuestions[currentQuestion].id;
+    const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
 
+    // Save the answer to DB
+    saveQuizAnswer(questionId, value);
+
     if (currentQuestion < quizQuestions.length - 1) {
-      const nextQ = currentQuestion + 2; // 1-indexed
+      const nextQ = currentQuestion + 2;
       updateVisitorStep(`quiz_pergunta_${nextQ}`);
       setCurrentQuestion((prev) => prev + 1);
     } else {
@@ -94,7 +98,6 @@ const Index = () => {
     );
   }
 
-  // Quiz screen
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16">
       <QuizProgress current={currentQuestion + 1} total={quizQuestions.length} />

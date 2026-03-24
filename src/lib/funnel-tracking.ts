@@ -9,6 +9,7 @@ export interface Lead {
   phone: string | null;
   status: LeadStatus;
   last_step: string;
+  quiz_answers: Record<string, string> | null;
   created_at: string;
 }
 
@@ -26,7 +27,6 @@ function setVisitorLeadId(id: string) {
   localStorage.setItem(VISITOR_KEY, id);
 }
 
-/** Creates a partial lead on first visit, returns lead id */
 export async function ensureVisitorLead(): Promise<string | null> {
   const existing = getVisitorLeadId();
   if (existing) return existing;
@@ -41,7 +41,6 @@ export async function ensureVisitorLead(): Promise<string | null> {
   return data.id;
 }
 
-/** Update the last funnel step for the current visitor */
 export async function updateVisitorStep(step: string) {
   const leadId = getVisitorLeadId();
   if (!leadId) return;
@@ -52,11 +51,31 @@ export async function updateVisitorStep(step: string) {
   if (error) console.error("updateVisitorStep error:", error);
 }
 
-/** Fill in lead contact info (pre-checkout) */
+/** Save a quiz answer for the current visitor */
+export async function saveQuizAnswer(questionId: number, answer: string) {
+  const leadId = getVisitorLeadId();
+  if (!leadId) return;
+
+  // Fetch current answers first
+  const { data } = await supabase
+    .from("leads")
+    .select("quiz_answers")
+    .eq("id", leadId)
+    .single();
+
+  const current = (data?.quiz_answers as Record<string, string>) || {};
+  const updated = { ...current, [String(questionId)]: answer };
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ quiz_answers: updated })
+    .eq("id", leadId);
+  if (error) console.error("saveQuizAnswer error:", error);
+}
+
 export async function completeLeadInfo(info: { name: string; email: string; phone: string }) {
   const leadId = getVisitorLeadId();
   if (!leadId) {
-    // fallback: create new lead with info
     return saveLead({ ...info, status: "aguardando" });
   }
   const { data, error } = await supabase
