@@ -13,30 +13,29 @@ import KanbanBoard from "@/components/admin/KanbanBoard";
 import { quizQuestions } from "@/components/quiz/QuizData";
 
 const STEP_LABELS: Record<string, string> = {
-  landing: "Landing Page",
+  landing: "Landing",
   quiz_pergunta_1: "Pergunta 1",
   quiz_pergunta_2: "Pergunta 2",
   quiz_pergunta_3: "Pergunta 3",
   quiz_pergunta_4: "Pergunta 4",
   quiz_pergunta_5: "Pergunta 5",
   resultado: "Resultado",
-  pagina_vendas: "Pág. Vendas",
-  pre_checkout: "Pré-Checkout",
+  pagina_vendas: "Vendas",
+  pre_checkout: "Checkout",
 };
 
 function getStepLabel(step: string) {
   return STEP_LABELS[step] || step;
 }
 
-function getStepColor(step: string) {
-  if (step === "pre_checkout") return "bg-emerald-500/20 text-emerald-700";
-  if (step === "pagina_vendas") return "bg-accent/20 text-accent-foreground";
-  if (step === "resultado") return "bg-blue-500/20 text-blue-700";
-  if (step.startsWith("quiz_")) return "bg-amber-500/20 text-amber-700";
-  return "bg-muted text-muted-foreground";
+function getStepBadge(step: string) {
+  if (step === "pre_checkout") return "bg-emerald-100 text-emerald-700 border-emerald-200";
+  if (step === "pagina_vendas") return "bg-blue-100 text-blue-700 border-blue-200";
+  if (step === "resultado") return "bg-violet-100 text-violet-700 border-violet-200";
+  if (step.startsWith("quiz_")) return "bg-amber-100 text-amber-700 border-amber-200";
+  return "bg-muted text-muted-foreground border-border";
 }
 
-// Map quiz answer values to readable labels
 const ANSWER_LABELS: Record<string, string> = {
   iniciante: "Nunca estudei",
   basico: "Sei algumas palavras",
@@ -63,6 +62,24 @@ const ANSWER_LABELS: Record<string, string> = {
 function getAnswerLabel(value: string) {
   return ANSWER_LABELS[value] || value;
 }
+
+// Pastel colors for each question column — creates a visual "heat map" of funnel progress
+const QUESTION_COLORS = [
+  { bg: "bg-violet-50", header: "bg-violet-100", text: "text-violet-700", filled: "bg-violet-100 text-violet-800", border: "border-violet-200" },
+  { bg: "bg-sky-50", header: "bg-sky-100", text: "text-sky-700", filled: "bg-sky-100 text-sky-800", border: "border-sky-200" },
+  { bg: "bg-emerald-50", header: "bg-emerald-100", text: "text-emerald-700", filled: "bg-emerald-100 text-emerald-800", border: "border-emerald-200" },
+  { bg: "bg-amber-50", header: "bg-amber-100", text: "text-amber-700", filled: "bg-amber-100 text-amber-800", border: "border-amber-200" },
+  { bg: "bg-rose-50", header: "bg-rose-100", text: "text-rose-700", filled: "bg-rose-100 text-rose-800", border: "border-rose-200" },
+];
+
+// Stat card pastel backgrounds
+const STAT_CARD_STYLES = [
+  "bg-violet-50 border-violet-100",
+  "bg-sky-50 border-sky-100",
+  "bg-emerald-50 border-emerald-100",
+  "bg-amber-50 border-amber-100",
+  "bg-rose-50 border-rose-100",
+];
 
 type PresetRange = "24h" | "7d" | "30d" | "custom";
 
@@ -109,14 +126,13 @@ const Admin = () => {
   const openWhatsApp = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
     const number = cleaned.startsWith("55") ? cleaned : `55${cleaned}`;
-    const message = encodeURIComponent("Gostei do seu curso, quero comprar mas tenho dúvidas");
-    window.open(`https://wa.me/${number}?text=${message}`, "_blank");
+    window.open(`https://wa.me/${number}?text=${encodeURIComponent("Gostei do seu curso, quero comprar mas tenho dúvidas")}`, "_blank");
   };
 
   if (loading || !stats) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-sans">Carregando...</p>
+        <p className="text-muted-foreground font-sans text-sm">Carregando...</p>
       </div>
     );
   }
@@ -124,165 +140,158 @@ const Admin = () => {
   const contactLeads = filteredLeads.filter((l) => l.name && l.email && l.phone);
   const totalFiltered = filteredLeads.length || 1;
 
-  // Compute per-step percentages for leads that REACHED each step (not just stopped)
   const stepOrder = ["landing", "quiz_pergunta_1", "quiz_pergunta_2", "quiz_pergunta_3", "quiz_pergunta_4", "quiz_pergunta_5", "resultado", "pagina_vendas", "pre_checkout"];
   const reachedStep: Record<string, number> = {};
   for (let i = 0; i < stepOrder.length; i++) {
-    // A lead reached step[i] if their last_step is step[i] or any later step
     reachedStep[stepOrder[i]] = filteredLeads.filter((l) => {
       const idx = stepOrder.indexOf(l.last_step);
       return idx >= i;
     }).length;
   }
-
   const stoppedAt: Record<string, number> = {};
   for (const step of stepOrder) {
     stoppedAt[step] = filteredLeads.filter((l) => l.last_step === step).length;
   }
 
-  // Leads that interacted (went past landing)
   const interacted = filteredLeads.filter((l) => l.last_step !== "landing").length;
   const interactionRate = ((interacted / totalFiltered) * 100).toFixed(1);
-  // Qualified = reached resultado or beyond
   const qualified = filteredLeads.filter((l) => {
     const idx = stepOrder.indexOf(l.last_step);
     return idx >= stepOrder.indexOf("resultado");
   }).length;
-  // Completed = pre_checkout
   const completed = filteredLeads.filter((l) => l.last_step === "pre_checkout").length;
 
   const topStats = [
     { label: "Visitas e Acessos", value: filteredLeads.length, sub: "Visitantes que acessaram o funil", icon: Eye },
-    { label: "Leads adquiridos", value: interacted, sub: "Iniciaram alguma interação com o funil", icon: UserPlus },
-    { label: "Taxa de interação", value: `${interactionRate}%`, sub: "Visitantes que interagiram com o funil", icon: MousePointerClick },
+    { label: "Leads adquiridos", value: interacted, sub: "Iniciaram interação com o funil", icon: UserPlus },
+    { label: "Taxa de interação", value: `${interactionRate}%`, sub: "Visitantes que interagiram", icon: MousePointerClick },
     { label: "Leads qualificados", value: qualified, sub: "Completaram o quiz", icon: UserCheck },
-    { label: "Fluxos completos", value: completed, sub: "Passaram da última etapa do funil", icon: MessageSquare },
+    { label: "Fluxos completos", value: completed, sub: "Chegaram ao pré-checkout", icon: MessageSquare },
   ];
 
   const presetButtons: { label: string; value: PresetRange }[] = [
     { label: "30 dias", value: "30d" },
     { label: "7 dias", value: "7d" },
     { label: "24 horas", value: "24h" },
-    { label: "Personalizado", value: "custom" },
   ];
 
-  // Per-question completion rates
   const questionSteps = quizQuestions.map((q, i) => ({
-    questionIndex: i,
     question: q,
-    stepKey: `quiz_pergunta_${i + 1}`,
     reached: reachedStep[`quiz_pergunta_${i + 1}`] || 0,
     rate: (((reachedStep[`quiz_pergunta_${i + 1}`] || 0) / totalFiltered) * 100).toFixed(0),
   }));
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-sans font-bold text-foreground">Painel Administrativo</h1>
-        </div>
+        <h1 className="text-2xl font-sans font-bold text-foreground mb-8">Overview</h1>
 
-        {/* Top stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          {topStats.map((s) => (
-            <div key={s.label} className="bg-card border border-border rounded-xl p-4">
-              <p className="text-xs font-sans text-muted-foreground mb-2">{s.label}</p>
-              <div className="flex items-center gap-2 mb-1">
-                <s.icon className="w-4 h-4 text-muted-foreground" />
-                <p className="text-2xl font-sans font-bold text-foreground">{s.value}</p>
+        {/* Top stat cards — pastel style like reference */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          {topStats.map((s, i) => (
+            <div key={s.label} className={`rounded-2xl p-5 border ${STAT_CARD_STYLES[i]} transition-shadow hover:shadow-md`}>
+              <p className="text-xs font-sans text-muted-foreground mb-3">{s.label}</p>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <s.icon className="w-5 h-5 text-muted-foreground/60" />
+                <p className="text-3xl font-sans font-bold text-foreground tracking-tight">{s.value}</p>
               </div>
               <p className="text-[11px] font-sans text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </div>
 
-        {/* Time filter + Tabs */}
+        {/* Tabs + time filter */}
         <Tabs defaultValue="respostas" className="w-full">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <TabsList className="bg-muted">
-              <TabsTrigger value="respostas" className="font-sans text-sm">Respostas</TabsTrigger>
-              <TabsTrigger value="leads" className="font-sans text-sm">Leads</TabsTrigger>
-              <TabsTrigger value="kanban" className="font-sans text-sm">Kanban</TabsTrigger>
-              <TabsTrigger value="abandono" className="font-sans text-sm">Abandono</TabsTrigger>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3 mb-6">
+            <TabsList className="bg-transparent p-0 h-auto gap-0">
+              <TabsTrigger value="respostas" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
+                Respostas
+              </TabsTrigger>
+              <TabsTrigger value="leads" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
+                Leads
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="abandono" className="font-sans text-sm data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 pb-3">
+                Performance
+              </TabsTrigger>
             </TabsList>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
               {presetButtons.map((btn) => (
-                <Button
+                <button
                   key={btn.value}
-                  variant="ghost"
-                  size="sm"
                   onClick={() => setPreset(btn.value)}
-                  className={cn("font-sans text-sm", preset === btn.value && "font-bold text-primary underline underline-offset-4")}
+                  className={cn(
+                    "font-sans text-sm px-3 py-1.5 rounded-md transition-all",
+                    preset === btn.value
+                      ? "bg-card text-foreground font-semibold shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
                   {btn.label}
-                </Button>
+                </button>
               ))}
-              {preset === "custom" && (
-                <div className="flex items-center gap-1 ml-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn("font-sans text-xs h-8", !customFrom && "text-muted-foreground")}>
-                        <CalendarIcon className="w-3 h-3 mr-1" />
-                        {customFrom ? format(customFrom, "dd/MM") : "De"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
-                    </PopoverContent>
-                  </Popover>
-                  <span className="text-muted-foreground text-xs">–</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn("font-sans text-xs h-8", !customTo && "text-muted-foreground")}>
-                        <CalendarIcon className="w-3 h-3 mr-1" />
-                        {customTo ? format(customTo, "dd/MM") : "Até"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={customTo} onSelect={setCustomTo} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={() => setPreset("custom")}
+                    className={cn(
+                      "font-sans text-sm px-3 py-1.5 rounded-md transition-all flex items-center gap-1",
+                      preset === "custom"
+                        ? "bg-card text-foreground font-semibold shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {preset === "custom" && customFrom ? format(customFrom, "dd/MM") : "Data"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <div className="flex gap-2 p-2">
+                    <div>
+                      <p className="text-xs font-sans text-muted-foreground px-3 py-1">De</p>
+                      <Calendar mode="single" selected={customFrom} onSelect={(d) => { setCustomFrom(d); setPreset("custom"); }} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-sans text-muted-foreground px-3 py-1">Até</p>
+                      <Calendar mode="single" selected={customTo} onSelect={(d) => { setCustomTo(d); setPreset("custom"); }} locale={ptBR} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
-          {/* Respostas Tab */}
-          <TabsContent value="respostas">
-            {/* Column headers per question with completion % */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {/* ===== RESPOSTAS TAB ===== */}
+          <TabsContent value="respostas" className="mt-0">
+            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30">
-                      <TableHead className="font-sans text-xs text-muted-foreground w-10">—</TableHead>
-                      <TableHead className="font-sans text-xs text-muted-foreground">Entrada</TableHead>
-                      {questionSteps.map((qs) => (
-                        <TableHead key={qs.stepKey} className="font-sans text-xs text-muted-foreground min-w-[140px]">
-                          <span className="font-semibold text-foreground">{qs.questionIndex + 1}</span>
-                          {" "}{qs.question.question.split("?")[0].slice(0, 25)}…
-                          <span className="ml-2 font-bold text-foreground">{qs.rate}%</span>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                    <TableRow className="bg-muted/10 border-b">
-                      <TableHead className="font-sans text-[10px] text-muted-foreground"></TableHead>
-                      <TableHead className="font-sans text-[10px] text-muted-foreground">
-                        [ID] Lead / Data
-                      </TableHead>
-                      {quizQuestions.map((q) => (
-                        <TableHead key={q.id} className="font-sans text-[10px] text-muted-foreground">
-                          Opções
-                        </TableHead>
-                      ))}
+                    {/* Question headers with colored backgrounds and completion % */}
+                    <TableRow className="border-b-0">
+                      <TableHead className="font-sans text-xs text-muted-foreground bg-muted/30 w-10 border-r border-border">—</TableHead>
+                      <TableHead className="font-sans text-xs text-muted-foreground bg-muted/30 min-w-[120px] border-r border-border">Entrada</TableHead>
+                      {questionSteps.map((qs, i) => {
+                        const color = QUESTION_COLORS[i];
+                        return (
+                          <TableHead key={i} className={`font-sans text-xs min-w-[160px] border-r border-border ${color.header}`}>
+                            <div className="flex items-center justify-between">
+                              <span className={`font-semibold ${color.text}`}>{i + 1} {qs.question.question.split("?")[0].slice(0, 20)}…</span>
+                              <span className={`text-sm font-bold ${color.text}`}>{qs.rate}%</span>
+                            </div>
+                          </TableHead>
+                        );
+                      })}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={2 + quizQuestions.length} className="text-center py-12 text-muted-foreground font-sans">
+                        <TableCell colSpan={2 + quizQuestions.length} className="text-center py-16 text-muted-foreground font-sans text-sm">
                           Nenhum lead neste período.
                         </TableCell>
                       </TableRow>
@@ -290,24 +299,23 @@ const Admin = () => {
                       filteredLeads.map((lead, index) => {
                         const answers = (lead.quiz_answers || {}) as Record<string, string>;
                         return (
-                          <TableRow key={lead.id} className="hover:bg-muted/30">
-                            <TableCell className="font-sans text-xs text-muted-foreground">{index + 1}</TableCell>
-                            <TableCell className="font-sans">
-                              <div className="flex flex-col">
-                                <span className="text-xs font-mono text-muted-foreground">{lead.id.slice(0, 6)}</span>
-                                <span className="text-[11px] text-muted-foreground">
-                                  {new Date(lead.created_at).toLocaleDateString("pt-BR")}
-                                </span>
-                              </div>
+                          <TableRow key={lead.id} className="hover:bg-muted/20 transition-colors">
+                            <TableCell className="font-sans text-xs text-muted-foreground border-r border-border text-center">{index + 1}</TableCell>
+                            <TableCell className="font-sans border-r border-border">
+                              <p className="text-xs font-mono text-muted-foreground">{lead.id.slice(0, 6)}</p>
+                              <p className="text-[10px] text-muted-foreground">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</p>
                             </TableCell>
-                            {quizQuestions.map((q) => {
+                            {quizQuestions.map((q, i) => {
                               const ans = answers[String(q.id)];
+                              const color = QUESTION_COLORS[i];
                               return (
-                                <TableCell key={q.id} className="font-sans text-xs">
+                                <TableCell key={q.id} className={`font-sans text-xs border-r border-border ${ans ? color.bg : ""}`}>
                                   {ans ? (
-                                    <span className="text-foreground">{getAnswerLabel(ans)}</span>
+                                    <span className={`inline-block px-2 py-1 rounded-md text-[11px] font-medium ${color.filled}`}>
+                                      {getAnswerLabel(ans)}
+                                    </span>
                                   ) : (
-                                    <span className="text-muted-foreground/40">—</span>
+                                    <span className="text-muted-foreground/30">—</span>
                                   )}
                                 </TableCell>
                               );
@@ -322,9 +330,9 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* Leads Tab */}
-          <TabsContent value="leads">
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {/* ===== LEADS TAB ===== */}
+          <TabsContent value="leads" className="mt-0">
+            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -340,13 +348,13 @@ const Admin = () => {
                 <TableBody>
                   {filteredLeads.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground font-sans">
+                      <TableCell colSpan={7} className="text-center py-16 text-muted-foreground font-sans text-sm">
                         Nenhum lead neste período.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className="hover:bg-muted/30">
+                      <TableRow key={lead.id} className="hover:bg-muted/20 transition-colors">
                         <TableCell className="font-sans text-sm font-semibold text-foreground">
                           {lead.name || <span className="text-muted-foreground italic text-xs">Anônimo</span>}
                         </TableCell>
@@ -357,16 +365,16 @@ const Admin = () => {
                           {lead.phone || <span className="italic text-xs">—</span>}
                         </TableCell>
                         <TableCell className="font-sans text-sm">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-                            lead.status === "comprou" ? "bg-emerald-500/20 text-emerald-700" :
-                            lead.status === "nao_comprou" ? "bg-destructive/20 text-destructive" :
-                            "bg-amber-500/20 text-amber-700"
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                            lead.status === "comprou" ? "bg-emerald-100 text-emerald-700" :
+                            lead.status === "nao_comprou" ? "bg-rose-100 text-rose-700" :
+                            "bg-amber-100 text-amber-700"
                           }`}>
                             {lead.status === "comprou" ? "Comprou" : lead.status === "nao_comprou" ? "Não Comprou" : "Aguardando"}
                           </span>
                         </TableCell>
                         <TableCell className="font-sans text-sm">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStepColor(lead.last_step)}`}>
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold border ${getStepBadge(lead.last_step)}`}>
                             {getStepLabel(lead.last_step)}
                           </span>
                         </TableCell>
@@ -377,13 +385,13 @@ const Admin = () => {
                           {lead.phone ? (
                             <button
                               onClick={() => openWhatsApp(lead.phone!)}
-                              className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-accent hover:underline"
+                              className="inline-flex items-center gap-1.5 text-sm font-sans font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
                             >
                               <MessageCircle className="w-4 h-4" />
                               WhatsApp
                             </button>
                           ) : (
-                            <span className="text-xs text-muted-foreground italic">—</span>
+                            <span className="text-xs text-muted-foreground/40">—</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -394,38 +402,42 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* Kanban Tab */}
-          <TabsContent value="kanban">
+          {/* ===== KANBAN TAB ===== */}
+          <TabsContent value="kanban" className="mt-0">
             <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
           </TabsContent>
 
-          {/* Abandono Tab */}
-          <TabsContent value="abandono">
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
-                <TrendingDown className="w-5 h-5 mb-2 text-destructive" />
-                <p className="text-2xl font-sans font-bold text-destructive">{stats.quizDropoffRate}%</p>
-                <p className="text-sm font-sans text-muted-foreground">Abandono no Quiz</p>
+          {/* ===== PERFORMANCE / ABANDONO TAB ===== */}
+          <TabsContent value="abandono" className="mt-0">
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="rounded-2xl p-5 bg-rose-50 border border-rose-100">
+                <TrendingDown className="w-5 h-5 mb-2 text-rose-500" />
+                <p className="text-3xl font-sans font-bold text-rose-700 tracking-tight">{stats.quizDropoffRate}%</p>
+                <p className="text-sm font-sans text-muted-foreground mt-1">Abandono no Quiz</p>
               </div>
-              <div className="rounded-xl p-4 bg-destructive/10 border border-destructive/20">
-                <TrendingDown className="w-5 h-5 mb-2 text-destructive" />
-                <p className="text-2xl font-sans font-bold text-destructive">{stats.salesDropoffRate}%</p>
-                <p className="text-sm font-sans text-muted-foreground">Abandono na Vendas</p>
+              <div className="rounded-2xl p-5 bg-amber-50 border border-amber-100">
+                <TrendingDown className="w-5 h-5 mb-2 text-amber-500" />
+                <p className="text-3xl font-sans font-bold text-amber-700 tracking-tight">{stats.salesDropoffRate}%</p>
+                <p className="text-sm font-sans text-muted-foreground mt-1">Abandono na Vendas</p>
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-4">
-              <p className="text-sm font-sans font-semibold text-foreground mb-4">Abandono por Etapa</p>
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+              <p className="text-sm font-sans font-semibold text-foreground mb-5">Abandono por Etapa</p>
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
-                {stepOrder.map((step) => {
+                {stepOrder.map((step, i) => {
                   const stopped = stoppedAt[step] || 0;
                   const pct = ((stopped / totalFiltered) * 100).toFixed(1);
                   const isHigh = parseFloat(pct) > 15;
                   return (
-                    <div key={step} className={`rounded-lg p-3 border text-center ${stopped === 0 ? "bg-muted/30 border-border" : isHigh ? "bg-destructive/10 border-destructive/30" : "bg-amber-500/10 border-amber-500/30"}`}>
-                      <p className={`text-lg font-sans font-bold ${stopped === 0 ? "text-muted-foreground" : isHigh ? "text-destructive" : "text-amber-700"}`}>{pct}%</p>
+                    <div key={step} className={`rounded-xl p-3 border text-center transition-shadow hover:shadow-sm ${
+                      stopped === 0 ? "bg-muted/20 border-border" : isHigh ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-200"
+                    }`}>
+                      <p className={`text-lg font-sans font-bold ${
+                        stopped === 0 ? "text-muted-foreground/40" : isHigh ? "text-rose-700" : "text-amber-700"
+                      }`}>{pct}%</p>
                       <p className="text-[10px] font-sans text-muted-foreground leading-tight mt-1">{getStepLabel(step)}</p>
-                      <p className="text-[10px] font-sans text-muted-foreground/60">{stopped}</p>
+                      <p className="text-[10px] font-sans text-muted-foreground/50">{stopped}</p>
                     </div>
                   );
                 })}
