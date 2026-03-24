@@ -273,7 +273,7 @@ const Admin = () => {
           <KanbanBoard leads={contactLeads} onStatusChange={handleStatusChange} />
         </div>
 
-        <h2 className="text-2xl font-display font-bold text-foreground mb-4">
+        <h2 className="text-2xl font-sans font-bold text-foreground mb-4">
           Todos os Leads ({filteredLeads.length})
         </h2>
 
