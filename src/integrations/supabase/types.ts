@@ -40,6 +40,7 @@ export type Database = {
           last_step: string
           name: string | null
           phone: string | null
+          quiz_answers: Json | null
           status: string
         }
         Insert: {
@@ -49,6 +50,7 @@ export type Database = {
           last_step?: string
           name?: string | null
           phone?: string | null
+          quiz_answers?: Json | null
           status?: string
         }
         Update: {
@@ -58,6 +60,7 @@ export type Database = {
           last_step?: string
           name?: string | null
           phone?: string | null
+          quiz_answers?: Json | null
           status?: string
         }
         Relationships: []
