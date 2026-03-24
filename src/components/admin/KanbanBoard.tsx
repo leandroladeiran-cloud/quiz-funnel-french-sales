@@ -1,6 +1,7 @@
 import { useState, type DragEvent } from "react";
 import { type Lead, type LeadStatus, updateLeadStatus } from "@/lib/funnel-tracking";
-import { MessageCircle, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import whatsappIcon from "@/assets/whatsapp-icon.png";
 
 interface KanbanBoardProps {
   leads: Lead[];
@@ -88,7 +89,7 @@ const KanbanBoard = ({ leads, onStatusChange }: KanbanBoardProps) => {
                         className="shrink-0 w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
                         title="Abrir WhatsApp"
                       >
-                        <MessageCircle className="w-3.5 h-3.5" />
+                        <img src={whatsappIcon} alt="WhatsApp" className="w-4 h-4" />
                       </button>
                     )}
                   </div>
