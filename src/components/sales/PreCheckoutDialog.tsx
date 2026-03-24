@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { saveLead, trackEvent } from "@/lib/funnel-tracking";
+import { completeLeadInfo, trackEvent } from "@/lib/funnel-tracking";
 import { CheckCircle } from "lucide-react";
 
 interface PreCheckoutDialogProps {
@@ -20,7 +20,7 @@ const PreCheckoutDialog = ({ open, onOpenChange }: PreCheckoutDialogProps) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !phone.trim()) return;
 
-    await saveLead({ name: name.trim(), email: email.trim(), phone: phone.trim(), status: "aguardando" });
+    await completeLeadInfo({ name: name.trim(), email: email.trim(), phone: phone.trim() });
     await trackEvent("pre_checkout");
     setSubmitted(true);
   };
